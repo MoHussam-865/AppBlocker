@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.android_a865.appblocker.databinding.AdapterBlockedAppsBinding
 
-class BlockedAppsAdapter() : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(InvoiceDiffCallback()) {
+class BlockedAppsAdapter(
+    private val listener: OnItemEventListener,
+) : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(InvoiceDiffCallback()) {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -26,6 +28,17 @@ class BlockedAppsAdapter() : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(Inv
     inner class ViewHolder(private val binding: AdapterBlockedAppsBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        init {
+            binding.isBlocked.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val item = getItem(position)
+                    listener.onItemClicked(item)
+                }
+            }
+
+        }
+
         fun bind(app: App) {
             binding.apply {
                 image.setImageDrawable(app.icon)
@@ -40,5 +53,9 @@ class BlockedAppsAdapter() : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(Inv
 
         override fun areContentsTheSame(oldItem: App, newItem: App): Boolean =
             oldItem == newItem
+    }
+
+    interface OnItemEventListener {
+        fun onItemClicked(app: App)
     }
 }
