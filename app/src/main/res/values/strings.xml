@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AppBlocker</string>
+    <string name="block_time_in_minutes">Block time in minutes</string>
+</resources>
