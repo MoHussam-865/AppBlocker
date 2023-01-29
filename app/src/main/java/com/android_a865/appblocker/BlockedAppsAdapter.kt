@@ -29,11 +29,11 @@ class BlockedAppsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.isBlocked.setOnClickListener {
+            binding.isBlocked.setOnCheckedChangeListener { _, isChecked ->
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val item = getItem(position)
-                    listener.onItemClicked(item)
+                    listener.onItemClicked(item, isChecked)
                 }
             }
 
@@ -43,6 +43,7 @@ class BlockedAppsAdapter(
             binding.apply {
                 image.setImageDrawable(app.icon)
                 appName.text = app.name
+                isBlocked.isChecked = app.selected
             }
         }
     }
@@ -56,6 +57,6 @@ class BlockedAppsAdapter(
     }
 
     interface OnItemEventListener {
-        fun onItemClicked(app: App)
+        fun onItemClicked(app: App, isChecked: Boolean)
     }
 }

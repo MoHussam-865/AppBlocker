@@ -1,8 +1,6 @@
 package com.android_a865.appblocker
 
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
@@ -11,7 +9,7 @@ import com.android_a865.appblocker.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
-    private var installedApps = emptyList<App>()
+    private var installedApps = ArrayList<App>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +27,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             }
 
             start.setOnClickListener {
-                val time = blockTime.editText?.text.toString().toInt()
+                val time = blockTime.editText?.text.toString()
 
             }
 
@@ -39,25 +37,37 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
     private fun getApplications() {
         installedApps = AppFetcher.getInstalledApplications(this)
+                as ArrayList<App>
         val packages = PreferencesManager.readData(this)
+
         installedApps.forEach {
             if (it.packageName in packages) {
                 it.selected = true
             }
         }
-
+        refresh()
     }
 
-    override fun onItemClicked(app: App) {
+    override fun onItemClicked(app: App, isChecked: Boolean) {
+        installedApps.forEachIndexed { index, application ->
+            if (application.packageName == app.packageName) {
+                installedApps[index] = application.copy(selected = isChecked)
+            }
+        }
+        
+        PreferencesManager.writeData(this, installedApps.filter { it.selected })
         refresh()
     }
 
     private fun refresh() {
-        installedApps.sortedByDescending {
-            it.selected
-        }
+        val sortedArray = ArrayList<App>()
 
-        blockedAppsAdapter.submitList(installedApps)
+        installedApps.forEach { if (it.selected) sortedArray.add(it) }
+
+        installedApps.forEach { if (!it.selected) sortedArray.add(it) }
+
+        installedApps = sortedArray
+
+        blockedAppsAdapter.submitList(installedApps as List<App>)
     }
-
 }
