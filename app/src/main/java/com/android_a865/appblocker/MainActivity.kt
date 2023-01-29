@@ -1,9 +1,14 @@
 package com.android_a865.appblocker
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
+import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.services.AppFetcher
+import com.android_a865.appblocker.services.PreferencesManager
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
@@ -20,6 +25,10 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         binding.apply {
 
+            start.isVisible = PreferencesManager
+                .getEndTime(this@MainActivity) <= System
+                .currentTimeMillis()
+
             blockedAppsList.apply {
                 adapter = blockedAppsAdapter
                 layoutManager = LinearLayoutManager(context)
@@ -27,7 +36,22 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             }
 
             start.setOnClickListener {
-                val time = blockTime.editText?.text.toString()
+                try {
+                    val time = blockTime.editText?.text.toString().toInt()
+                    val endTime = System.currentTimeMillis() + time * 60000
+                    PreferencesManager.setEndTime(this@MainActivity, endTime)
+                    PreferencesManager.setAllowedApps(
+                        this@MainActivity,
+                        installedApps.filter { !it.selected }
+                    )
+
+                    // TODO Allow Allowed apps and block all the others
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Blocking Started",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: Exception) {  }
 
             }
 
@@ -38,7 +62,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     private fun getApplications() {
         installedApps = AppFetcher.getInstalledApplications(this)
                 as ArrayList<App>
-        val packages = PreferencesManager.readData(this)
+        val packages = PreferencesManager.getLockedApps(this)
 
         installedApps.forEach {
             if (it.packageName in packages) {
@@ -54,17 +78,16 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 installedApps[index] = application.copy(selected = isChecked)
             }
         }
-        
-        PreferencesManager.writeData(this, installedApps.filter { it.selected })
+
+        PreferencesManager.setLockedApps(this, installedApps.filter { it.selected })
         refresh()
     }
 
     private fun refresh() {
         val sortedArray = ArrayList<App>()
 
-        installedApps.forEach { if (it.selected) sortedArray.add(it) }
-
-        installedApps.forEach { if (!it.selected) sortedArray.add(it) }
+        sortedArray.addAll(installedApps.filter { it.selected })
+        sortedArray.addAll(installedApps.filter { !it.selected }.sortedBy { it.name })
 
         installedApps = sortedArray
 

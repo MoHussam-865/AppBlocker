@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.android_a865.appblocker.databinding.AdapterBlockedAppsBinding
+import com.android_a865.appblocker.models.App
 
 class BlockedAppsAdapter(
     private val listener: OnItemEventListener,

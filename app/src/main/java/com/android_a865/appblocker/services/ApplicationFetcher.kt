@@ -1,10 +1,9 @@
-package com.android_a865.appblocker
+package com.android_a865.appblocker.services
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.content.pm.ResolveInfo
+import com.android_a865.appblocker.models.App
 import java.util.*
 
 
