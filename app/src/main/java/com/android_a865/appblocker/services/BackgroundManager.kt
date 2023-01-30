@@ -6,11 +6,21 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.android_a865.appblocker.MainActivity
+import com.android_a865.appblocker.R
 import com.android_a865.appblocker.broadcasts.RestartServiceWhenStopped
 
 
-class BackgroundManager(private val context: Context) {
 
+class BackgroundManager {
+
+    lateinit var context: Context
+
+    fun init(ctx: Context): BackgroundManager {
+        context = ctx
+        return this
+    }
 
     private fun isServiceRunning(serviceClass: Class<*>): Boolean {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -59,6 +69,18 @@ class BackgroundManager(private val context: Context) {
     companion object {
         private const val period = 15 * 1000
         private const val ALARM_ID = 159874
+        const val NOTIFICATION_ID = 1
+        const val NOTIFICATION_CHANNEL_ID = "channelId"
+
+        var instance: BackgroundManager? = null
+            get() {
+                if (field == null) {
+                    field = BackgroundManager()
+                }
+                return field
+            }
+            private set
+
     }
 
 }

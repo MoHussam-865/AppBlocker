@@ -6,6 +6,6 @@ import android.graphics.drawable.Icon
 data class App(
     val icon: Drawable,
     val name: String?,
-    val packageName: String?,
+    val packageName: String,
     var selected: Boolean = false,
 )

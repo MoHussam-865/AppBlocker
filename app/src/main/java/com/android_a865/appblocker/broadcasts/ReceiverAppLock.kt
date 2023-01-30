@@ -7,17 +7,19 @@ import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import com.android_a865.appblocker.MainActivity
-import com.android_a865.appblocker.services.PreferencesManager
+import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.utils.Utils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class ReceiverAppLock: BroadcastReceiver() {
 
     private fun killPackageIfRunning(context: Context, packageName: String) {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE)
-                as ActivityManager
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val startMain = Intent(Intent.ACTION_MAIN)
         startMain.addCategory(Intent.CATEGORY_HOME)
+        startMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         context.startActivity(startMain)
         activityManager.killBackgroundProcesses(packageName)
     }
@@ -27,24 +29,24 @@ class ReceiverAppLock: BroadcastReceiver() {
         if (context == null) return
         val util = Utils(context)
         val appRunning = util.getLauncherTopApp()
-        val allowedApps = PreferencesManager.getAllowedApps(context)
+        //val allowedApps = PreferencesManager.getAllowedApps(context)
+        val lockedApps = PreferencesManager.getLockedApps(context)
         val endTime = PreferencesManager.getEndTime(context)
 
+
+
         if (System.currentTimeMillis() < endTime) {
-            if (appRunning !in allowedApps) {
+            // The App is not allowed
+            if (lockedApps.contains(appRunning)) {
 
                 killPackageIfRunning(context, appRunning)
-
-                val i = Intent(context, MainActivity::class.java)
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                i.putExtra("broadcast_receiver", "broadcast_receiver")
-                context.startActivity(i)
-
                 Toast.makeText(
                     context,
                     "App Blocker: you are blocked",
                     Toast.LENGTH_SHORT
                 ).show()
+
+
             }
         }
 

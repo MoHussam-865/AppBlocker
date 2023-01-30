@@ -29,6 +29,8 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/blocked_apps_list"
             android:layout_width="match_parent"

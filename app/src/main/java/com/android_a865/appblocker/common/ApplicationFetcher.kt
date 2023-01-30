@@ -1,10 +1,11 @@
-package com.android_a865.appblocker.services
+package com.android_a865.appblocker.common
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.android_a865.appblocker.models.App
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class AppFetcher {
@@ -20,7 +21,6 @@ class AppFetcher {
             val apps = packageManager?.getInstalledApplications(0)
 
 
-
             val myApps = ArrayList<App>()
 
             apps?.forEach { app ->
@@ -29,10 +29,26 @@ class AppFetcher {
                     val appIcon = packageManager.getApplicationIcon(app)
                     val appPackage = app.packageName
 
-                    myApps.add(App(appIcon,appName,appPackage))
+                    myApps.add(App(appIcon, appName, appPackage))
                 }
             }
 
+            return myApps
+        }
+
+        @SuppressLint("QueryPermissionsNeeded")
+        fun getAllInstalledApplications(
+            context: Context
+        ): List<App> {
+            val packageManager = context.packageManager
+            val apps = packageManager?.getInstalledApplications(0)
+            val myApps = ArrayList<App>()
+            apps?.forEach { app ->
+                val appName = packageManager.getApplicationLabel(app).toString()
+                val appIcon = packageManager.getApplicationIcon(app)
+                val appPackage = app.packageName
+                myApps.add(App(appIcon, appName, appPackage))
+            }
             return myApps
         }
 

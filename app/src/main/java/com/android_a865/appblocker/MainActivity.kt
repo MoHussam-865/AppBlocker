@@ -1,14 +1,16 @@
 package com.android_a865.appblocker
 
 import android.os.Bundle
+import android.text.Editable
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
-import com.android_a865.appblocker.services.AppFetcher
-import com.android_a865.appblocker.services.PreferencesManager
+import com.android_a865.appblocker.common.AppFetcher
+import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.services.BackgroundManager
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
@@ -25,9 +27,10 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         binding.apply {
 
-            start.isVisible = PreferencesManager
-                .getEndTime(this@MainActivity) <= System
-                .currentTimeMillis()
+            blockTime.editText?.setText(PreferencesManager
+                .getLastTime(this@MainActivity)
+                .toString()
+            )
 
             blockedAppsList.apply {
                 adapter = blockedAppsAdapter
@@ -35,22 +38,12 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 setHasFixedSize(true)
             }
 
+
             start.setOnClickListener {
                 try {
-                    val time = blockTime.editText?.text.toString().toInt()
-                    val endTime = System.currentTimeMillis() + time * 60000
-                    PreferencesManager.setEndTime(this@MainActivity, endTime)
-                    PreferencesManager.setAllowedApps(
-                        this@MainActivity,
-                        installedApps.filter { !it.selected }
+                    block(
+                        blockTime.editText?.text.toString().toInt()
                     )
-
-                    // TODO Allow Allowed apps and block all the others
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Blocking Started",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 } catch (e: Exception) {  }
 
             }
@@ -65,7 +58,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         val packages = PreferencesManager.getLockedApps(this)
 
         installedApps.forEach {
-            if (it.packageName in packages) {
+            if (packages.contains(it.packageName)) {
                 it.selected = true
             }
         }
@@ -93,4 +86,26 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         blockedAppsAdapter.submitList(installedApps as List<App>)
     }
+
+    private fun block(time: Int) {
+        val endTime = System.currentTimeMillis() + time * 60000
+        PreferencesManager.setEndTime(this@MainActivity, endTime)
+        PreferencesManager.setLastTime(this@MainActivity, time)
+        PreferencesManager.setAllowedApps(
+            this@MainActivity,
+            installedApps.filter { !it.selected }
+        )
+
+
+
+        // TODO Allow Allowed apps and block all the others
+        //val intent = Intent(this@MainActivity, )
+        BackgroundManager.instance?.init(this@MainActivity)?.startService()
+        Toast.makeText(
+            this@MainActivity,
+            "Blocking Started",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
 }

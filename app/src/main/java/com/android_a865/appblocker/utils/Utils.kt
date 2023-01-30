@@ -14,10 +14,8 @@ class Utils(private val context: Context) {
     fun getLauncherTopApp(): String {
         val endTime = System.currentTimeMillis()
         val beginTime = endTime - 10000
-        val result = ""
+        var result = ""
 
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE)
-                as ActivityManager
         val usageStateManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
                 as UsageStatsManager
 
@@ -26,7 +24,7 @@ class Utils(private val context: Context) {
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(event)
             if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                val result = event.packageName
+                result = event.packageName
             }
         }
 
