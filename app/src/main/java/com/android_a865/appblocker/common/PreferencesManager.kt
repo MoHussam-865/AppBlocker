@@ -23,9 +23,10 @@ class PreferencesManager {
                 .apply()
         }
 
-        fun getLockedApps(context: Context): String {
+        fun getLockedApps(context: Context): List<String> {
             return PreferenceManager.getDefaultSharedPreferences(context)
-            .getString(LOCKED_APPS, "") ?: ""
+                .getString(LOCKED_APPS, "")?.split("/")
+                ?.filter { it != "" } ?: emptyList()
         }
 
         fun setAllowedApps(context: Context, apps: List<App>) {
@@ -40,9 +41,10 @@ class PreferencesManager {
                 .apply()
         }
 
-        fun getAllowedApps(context: Context): String {
+        fun getAllowedApps(context: Context): List<String> {
             return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(ALLOWED_APPS, "") ?: ""
+                .getString(ALLOWED_APPS, "")?.split("/")
+                ?.filter { it != "" } ?: emptyList()
         }
 
         fun setEndTime(context: Context, time: Long) {

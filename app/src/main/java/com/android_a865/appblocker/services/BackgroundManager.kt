@@ -6,6 +6,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings.Global.getString
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.android_a865.appblocker.MainActivity
 import com.android_a865.appblocker.R
@@ -51,9 +53,15 @@ class BackgroundManager {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun startAlarmManager() {
         val intent = Intent(context, RestartServiceWhenStopped::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, ALARM_ID, intent, 0)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            ALARM_ID,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
         val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         manager[AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + period] =
             pendingIntent
@@ -71,6 +79,8 @@ class BackgroundManager {
         private const val ALARM_ID = 159874
         const val NOTIFICATION_ID = 1
         const val NOTIFICATION_CHANNEL_ID = "channelId"
+
+
 
         var instance: BackgroundManager? = null
             get() {

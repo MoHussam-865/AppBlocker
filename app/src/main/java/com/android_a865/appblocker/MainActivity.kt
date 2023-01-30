@@ -88,24 +88,27 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     }
 
     private fun block(time: Int) {
+        Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
+
         val endTime = System.currentTimeMillis() + time * 60000
-        PreferencesManager.setEndTime(this@MainActivity, endTime)
-        PreferencesManager.setLastTime(this@MainActivity, time)
-        PreferencesManager.setAllowedApps(
-            this@MainActivity,
-            installedApps.filter { !it.selected }
-        )
+        PreferencesManager.setEndTime(this, endTime)
+        PreferencesManager.setLastTime(this, time)
+
+        val allApps = AppFetcher.getAllInstalledApplications(this)
+        val blockedApps = installedApps.filter { it.selected }
+        val blockedAppsPackage = blockedApps.map { it.packageName }
+        val allowedApps = allApps.filter {
+            it.packageName !in blockedAppsPackage
+        }
+
+        PreferencesManager.setAllowedApps(this, allowedApps)
+        PreferencesManager.setLockedApps(this, blockedApps)
 
 
 
         // TODO Allow Allowed apps and block all the others
         //val intent = Intent(this@MainActivity, )
-        BackgroundManager.instance?.init(this@MainActivity)?.startService()
-        Toast.makeText(
-            this@MainActivity,
-            "Blocking Started",
-            Toast.LENGTH_SHORT
-        ).show()
+        //BackgroundManager.instance?.init(this)?.startService()
     }
 
 }

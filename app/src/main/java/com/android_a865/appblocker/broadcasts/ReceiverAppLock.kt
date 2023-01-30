@@ -5,13 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.utils.Utils
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class ReceiverAppLock: BroadcastReceiver() {
 
@@ -28,16 +26,17 @@ class ReceiverAppLock: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
         val util = Utils(context)
-        val appRunning = util.getLauncherTopApp()
-        //val allowedApps = PreferencesManager.getAllowedApps(context)
-        val lockedApps = PreferencesManager.getLockedApps(context)
+        val appRunning = util.getForegroundApp(context)
+        val allowedApps = PreferencesManager.getAllowedApps(context)
+        //val lockedApps = PreferencesManager.getLockedApps(context)
         val endTime = PreferencesManager.getEndTime(context)
 
 
-
-        if (System.currentTimeMillis() < endTime) {
+        if (System.currentTimeMillis() < endTime && appRunning != "") {
             // The App is not allowed
-            if (lockedApps.contains(appRunning)) {
+            if (!allowedApps.contains(appRunning)) {
+
+                Log.d("running app", appRunning)
 
                 killPackageIfRunning(context, appRunning)
                 Toast.makeText(

@@ -1,12 +1,23 @@
 package com.android_a865.appblocker.utils
 
+import android.R
+import android.annotation.SuppressLint
 import android.app.ActivityManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.usage.UsageEvents
+import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.graphics.Color
 import android.os.Build
-import android.text.TextUtils
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import com.android_a865.appblocker.services.BackgroundManager
+import java.util.*
+
 
 class Utils(private val context: Context) {
 
@@ -31,4 +42,30 @@ class Utils(private val context: Context) {
         return result
     }
 
+    fun getForegroundApp(context: Context): String {
+        var currentApp = ""
+        @SuppressLint("WrongConstant") val usm =
+            context.getSystemService("usagestats") as UsageStatsManager?
+        val time = System.currentTimeMillis()
+        assert(usm != null)
+        val appList =
+            usm!!.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
+        if (appList != null && appList.size > 0) {
+            val mySortedMap: SortedMap<Long, UsageStats> = TreeMap()
+            for (usageStats in appList) {
+                mySortedMap[usageStats.lastTimeUsed] = usageStats
+            }
+            if (!mySortedMap.isEmpty()) {
+                currentApp = mySortedMap[mySortedMap.lastKey()]?.packageName ?: ""
+            }
+        } else {
+            val am = (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?)!!
+            val tasks = am.runningAppProcesses
+            currentApp = tasks[0].processName
+        }
+
+        Log.d("running Foreground", "Current App in foreground is: $currentApp")
+        return currentApp
+
+    }
 }
