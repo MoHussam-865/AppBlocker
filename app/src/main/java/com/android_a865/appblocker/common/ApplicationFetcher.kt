@@ -2,9 +2,9 @@ package com.android_a865.appblocker.common
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import com.android_a865.appblocker.models.App
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -57,6 +57,31 @@ class AppFetcher {
                 return true
             return false
         }
+
+
+        fun getApps(context: Context): List<App> {
+            val apps = ArrayList<App>()
+            val packageManager = context.packageManager
+            val intent = Intent(Intent.ACTION_MAIN, null)
+            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+            val resolveInfoList = packageManager.queryIntentActivities(intent, 0)
+
+            resolveInfoList.forEach  { resolveInfo ->
+                val activityInfo = resolveInfo.activityInfo
+
+                val name = activityInfo.loadLabel(context.packageManager).toString()
+                val icon = activityInfo.loadIcon(context.packageManager)
+                val packageName = activityInfo.packageName
+
+                if (!(packageName.contains("com.android_a865.appblocker")||
+                            packageName.contains("com.android.settings"))
+                ) apps.add(App(icon, name, packageName))
+
+            }
+
+            return apps
+        }
+
     }
 
 }

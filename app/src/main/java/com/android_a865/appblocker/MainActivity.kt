@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     }
 
     private fun getApplications() {
-        installedApps = AppFetcher.getInstalledApplications(this)
+        installedApps = AppFetcher.getApps(this)
                 as ArrayList<App>
         val packages = PreferencesManager.getLockedApps(this)
 
