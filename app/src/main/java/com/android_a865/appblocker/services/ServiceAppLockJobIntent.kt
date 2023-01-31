@@ -84,8 +84,7 @@ class ServiceAppLockJobIntent : JobIntentService() {
                 ""
             }
 
-        val notificationBuilder = NotificationCompat.Builder(context, channelId )
-        val notification = notificationBuilder
+        val notification = NotificationCompat.Builder(context, channelId )
             .setOngoing(true)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("App Blocker")

@@ -1,16 +1,17 @@
 package com.android_a865.appblocker
 
 import android.os.Bundle
-import android.text.Editable
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.android_a865.appblocker.databinding.ActivityMainBinding
-import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.common.AppFetcher
 import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.databinding.ActivityMainBinding
+import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
@@ -65,15 +66,23 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         refresh()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onItemClicked(app: App, isChecked: Boolean) {
-        installedApps.forEachIndexed { index, application ->
-            if (application.packageName == app.packageName) {
-                installedApps[index] = application.copy(selected = isChecked)
+
+        GlobalScope.launch {
+            installedApps.forEachIndexed { index, application ->
+                if (application.packageName == app.packageName) {
+                    installedApps[index] = application.copy(selected = isChecked)
+                }
             }
+
+            PreferencesManager.setLockedApps(
+                this@MainActivity,
+                installedApps.filter { it.selected }
+            )
+            refresh()
         }
 
-        PreferencesManager.setLockedApps(this, installedApps.filter { it.selected })
-        refresh()
     }
 
     private fun refresh() {
@@ -87,28 +96,39 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         blockedAppsAdapter.submitList(installedApps as List<App>)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun block(time: Int) {
         Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
 
-        val endTime = System.currentTimeMillis() + time * 60000
-        PreferencesManager.setEndTime(this, endTime)
-        PreferencesManager.setLastTime(this, time)
+        GlobalScope.launch {
+            val endTime = System.currentTimeMillis() + time * 60000
 
-        val allApps = AppFetcher.getAllInstalledApplications(this)
-        val blockedApps = installedApps.filter { it.selected }
-        val blockedAppsPackage = blockedApps.map { it.packageName }
-        val allowedApps = allApps.filter {
-            it.packageName !in blockedAppsPackage
+            val allApps = AppFetcher
+                .getAllInstalledApplications(this@MainActivity)
+            val blockedApps = installedApps.filter { it.selected }
+            val blockedAppsPackage = blockedApps.map { it.packageName }
+            val allowedApps = allApps.filter {
+                it.packageName !in blockedAppsPackage
+            }
+
+            /*PreferencesManager.setAllowedApps(this, allowedApps)
+            PreferencesManager.setLockedApps(this, blockedApps)
+            PreferencesManager.setEndTime(this, endTime)
+            PreferencesManager.setLastTime(this, time)*/
+            PreferencesManager.setupLockSettings(
+                this@MainActivity,
+                endTime,
+                blockedApps,
+                allowedApps,
+                time
+            )
+            BackgroundManager.instance?.init(this@MainActivity)?.startService()
+
+
         }
 
-        PreferencesManager.setAllowedApps(this, allowedApps)
-        PreferencesManager.setLockedApps(this, blockedApps)
 
-
-
-        // TODO Allow Allowed apps and block all the others
         //val intent = Intent(this@MainActivity, )
-        //BackgroundManager.instance?.init(this)?.startService()
     }
 
 }

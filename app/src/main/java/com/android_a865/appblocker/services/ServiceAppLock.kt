@@ -1,17 +1,17 @@
 package com.android_a865.appblocker.services
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.android_a865.appblocker.MainActivity
-import com.android_a865.appblocker.R
 import com.android_a865.appblocker.broadcasts.ReceiverAppLock
 import com.android_a865.appblocker.common.PreferencesManager
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -80,8 +80,7 @@ class ServiceAppLock : Service() {
                 ""
             }
 
-        val notificationBuilder = NotificationCompat.Builder(context, channelId )
-        val notification = notificationBuilder
+        val notification = NotificationCompat.Builder(context, channelId )
             .setOngoing(true)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("App Blocker")
