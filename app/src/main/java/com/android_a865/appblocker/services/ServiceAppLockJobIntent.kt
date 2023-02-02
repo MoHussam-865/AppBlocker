@@ -28,15 +28,13 @@ class ServiceAppLockJobIntent : JobIntentService() {
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onTaskRemoved(rootIntent: Intent) {
-        BackgroundManager.instance?.init(this)?.startService()
-        BackgroundManager.instance?.init(this)?.startAlarmManager()
+        BackgroundManager.instance?.startService(this)
         super.onTaskRemoved(rootIntent)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onDestroy() {
-        BackgroundManager.instance?.init(this)?.startService()
-        BackgroundManager.instance?.init(this)?.startAlarmManager()
+        BackgroundManager.instance?.startService(this)
         super.onDestroy()
     }
 
@@ -46,11 +44,12 @@ class ServiceAppLockJobIntent : JobIntentService() {
         while (System.currentTimeMillis() < endTime) {
             synchronized(this) {
                 try {
-                    val intent = Intent(this, ReceiverAppLock::class.java)
-                    sendBroadcast(intent)
-                    Log.d("running error","runAppLock in ServiceAppLockJob")
-                    GlobalScope.launch {
-                        delay(1000)
+
+                    val isActive = PreferencesManager.getActivity(this)
+                    if (isActive) {
+                        val intent = Intent(this, ReceiverAppLock::class.java)
+                        sendBroadcast(intent)
+                        Log.d("app running", "is Active")
                     }
                 } catch (e: InterruptedException) {
                     e.printStackTrace()

@@ -30,11 +30,12 @@ class ServiceAppLock : Service() {
         while (System.currentTimeMillis() < endTime) {
             synchronized(this) {
                 try {
-                    val intent = Intent(this, ReceiverAppLock::class.java)
-                    sendBroadcast(intent)
-                    Log.d("running error","runAppLock in ServiceAppLock")
-                    GlobalScope.launch {
-                        delay(15000)
+
+                    val isActive = PreferencesManager.getActivity(this)
+                    if (isActive) {
+                        val intent = Intent(this, ReceiverAppLock::class.java)
+                        sendBroadcast(intent)
+                        Log.d("app running", "is Active")
                     }
                 } catch (e: InterruptedException) {
                     e.printStackTrace()
@@ -53,16 +54,14 @@ class ServiceAppLock : Service() {
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onTaskRemoved(rootIntent: Intent) {
-        BackgroundManager.instance?.init(this)?.startService()
-        BackgroundManager.instance?.init(this)?.startAlarmManager()
+        BackgroundManager.instance?.startService(this)
         super.onTaskRemoved(rootIntent)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     @Deprecated("Deprecated in Java")
     override fun onDestroy() {
-        BackgroundManager.instance?.init(this)?.startService()
-        BackgroundManager.instance?.init(this)?.startAlarmManager()
+        BackgroundManager.instance?.startService(this)
         super.onDestroy()
     }
 

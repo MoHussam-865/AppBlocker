@@ -9,11 +9,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.services.BackgroundManager
 import com.android_a865.appblocker.utils.Utils
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class ReceiverAppLock : BroadcastReceiver() {
 
@@ -30,8 +28,7 @@ class ReceiverAppLock : BroadcastReceiver() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
-        val util = Utils(context)
-        val appRunning = util.getForegroundApp(context)
+        val appRunning = Utils(context).getForegroundApp()
         val allowedApps = PreferencesManager.getAllowedApps(context)
         //val lockedApps = PreferencesManager.getLockedApps(context)
         val endTime = PreferencesManager.getEndTime(context)
@@ -41,19 +38,17 @@ class ReceiverAppLock : BroadcastReceiver() {
             // The App is not allowed
             if (!allowedApps.contains(appRunning)) {
 
-                Log.d("running app", appRunning)
-
-
                 Thread.sleep(2000)
-
                 killPackageIfRunning(context, appRunning)
                 Toast.makeText(
                     context,
                     "App Blocker: you are blocked",
                     Toast.LENGTH_SHORT
                 ).show()
-
             }
+        } else {
+            PreferencesManager.setActivity(context, false)
+            BackgroundManager.instance?.stopService(context)
         }
 
     }

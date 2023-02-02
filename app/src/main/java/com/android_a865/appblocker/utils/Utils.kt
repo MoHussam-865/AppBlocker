@@ -1,21 +1,14 @@
 package com.android_a865.appblocker.utils
 
-import android.R
 import android.annotation.SuppressLint
 import android.app.ActivityManager
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
-import com.android_a865.appblocker.services.BackgroundManager
 import java.util.*
 
 
@@ -42,7 +35,7 @@ class Utils(private val context: Context) {
         return result
     }
 
-    fun getForegroundApp(context: Context): String {
+    fun getForegroundApp(): String {
         var currentApp = ""
         @SuppressLint("WrongConstant") val usm =
             context.getSystemService("usagestats") as UsageStatsManager?

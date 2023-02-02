@@ -1,7 +1,9 @@
 package com.android_a865.appblocker
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.common.AppFetcher
@@ -19,6 +21,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
     private var installedApps = ArrayList<App>()
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
@@ -28,9 +31,10 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         binding.apply {
 
-            blockTime.editText?.setText(PreferencesManager
-                .getLastTime(this@MainActivity)
-                .toString()
+            blockTime.editText?.setText(
+                PreferencesManager
+                    .getLastTime(this@MainActivity)
+                    .toString()
             )
 
             blockedAppsList.apply {
@@ -45,7 +49,9 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                     block(
                         blockTime.editText?.text.toString().toInt()
                     )
-                } catch (e: Exception) {  }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity,"Enter Time", Toast.LENGTH_SHORT).show()
+                }
 
             }
 
@@ -96,37 +102,50 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         blockedAppsAdapter.submitList(installedApps as List<App>)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     @OptIn(DelicateCoroutinesApi::class)
     private fun block(time: Int) {
-        Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
+        val blockedApps = installedApps.filter { it.selected }
 
-        GlobalScope.launch {
-            val endTime = System.currentTimeMillis() + time * 60000
+        /*val arrayList = ArrayList<App>()
+        installedApps.filter { it.selected }.forEach {
+            arrayList.add(it)
+        }
+        arrayList.add(App(
+            getDrawable(R.drawable.ic_edit)!!,
+            "settings",
+            "com.android.settings"
+        ))
+        val blockedApps = arrayList
+        */
 
-            val allApps = AppFetcher
-                .getAllInstalledApplications(this@MainActivity)
-            val blockedApps = installedApps.filter { it.selected }
-            val blockedAppsPackage = blockedApps.map { it.packageName }
-            val allowedApps = allApps.filter {
-                it.packageName !in blockedAppsPackage
+        if (blockedApps.isNotEmpty()) {
+            Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
+
+            GlobalScope.launch {
+                val endTime = System.currentTimeMillis() + time * 60000
+
+                val allApps = AppFetcher
+                    .getAllInstalledApplications(this@MainActivity)
+                val blockedAppsPackage = blockedApps.map { it.packageName }
+                val allowedApps = allApps.filter {
+                    it.packageName !in blockedAppsPackage
+                }
+
+                PreferencesManager.setupLockSettings(
+                    this@MainActivity,
+                    endTime,
+                    blockedApps,
+                    allowedApps,
+                    time
+                )
+                BackgroundManager.instance?.startService(this@MainActivity)
             }
-
-            /*PreferencesManager.setAllowedApps(this, allowedApps)
-            PreferencesManager.setLockedApps(this, blockedApps)
-            PreferencesManager.setEndTime(this, endTime)
-            PreferencesManager.setLastTime(this, time)*/
-            PreferencesManager.setupLockSettings(
-                this@MainActivity,
-                endTime,
-                blockedApps,
-                allowedApps,
-                time
-            )
-            BackgroundManager.instance?.init(this@MainActivity)?.startService()
-
-
         }
 
+        else {
+            Toast.makeText(this,"No apps selected",Toast.LENGTH_SHORT).show()
+        }
 
         //val intent = Intent(this@MainActivity, )
     }
