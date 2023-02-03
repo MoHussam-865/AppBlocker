@@ -1,6 +1,5 @@
 package com.android_a865.appblocker.broadcasts
 
-import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,44 +9,34 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.utils.Utils
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.android_a865.appblocker.utils.getForegroundApp
+import com.android_a865.appblocker.utils.killPackageIfRunning
 
 class ReceiverAppLock : BroadcastReceiver() {
 
-    private fun killPackageIfRunning(context: Context, packageName: String) {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val startMain = Intent(Intent.ACTION_MAIN)
-        startMain.addCategory(Intent.CATEGORY_HOME)
-        startMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(startMain)
-        activityManager.killBackgroundProcesses(packageName)
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
-        val appRunning = Utils(context).getForegroundApp()
+        val appRunning = getForegroundApp(context)
         val allowedApps = PreferencesManager.getAllowedApps(context)
         //val lockedApps = PreferencesManager.getLockedApps(context)
-        val endTime = PreferencesManager.getEndTime(context)
+        val isActive = PreferencesManager.isActive(context)
 
 
-        if (System.currentTimeMillis() < endTime && appRunning != "") {
+        if (isActive && appRunning != "") {
             // The App is not allowed
             if (!allowedApps.contains(appRunning)) {
 
-                Thread.sleep(2000)
+                Thread.sleep(1000)
                 killPackageIfRunning(context, appRunning)
                 Toast.makeText(
                     context,
                     "App Blocker: you are blocked",
                     Toast.LENGTH_SHORT
                 ).show()
+                Log.d("app_running", "service is running")
             }
         } else {
-            PreferencesManager.setActivity(context, false)
             BackgroundManager.instance?.stopService(context)
         }
 

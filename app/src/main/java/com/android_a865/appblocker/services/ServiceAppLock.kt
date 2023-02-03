@@ -14,24 +14,17 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.android_a865.appblocker.broadcasts.ReceiverAppLock
 import com.android_a865.appblocker.common.PreferencesManager
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 
 class ServiceAppLock : Service() {
 
-
-
-    @OptIn(DelicateCoroutinesApi::class)
     private fun runAppLock() {
         val endTime = PreferencesManager.getEndTime(this)
         while (System.currentTimeMillis() < endTime) {
             synchronized(this) {
                 try {
 
-                    val isActive = PreferencesManager.getActivity(this)
+                    val isActive = PreferencesManager.isActive(this)
                     if (isActive) {
                         val intent = Intent(this, ReceiverAppLock::class.java)
                         sendBroadcast(intent)

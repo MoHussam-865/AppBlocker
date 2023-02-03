@@ -4,13 +4,15 @@ import android.content.Context
 import android.preference.PreferenceManager
 import android.widget.Toast
 import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.services.BackgroundManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 object PreferencesManager {
     private const val LOCKED_APPS = "locked_apps"
     private const val ALLOWED_APPS = "allowed_apps"
     private const val END_TIME = "end_time"
     private const val LAST_TIME = "last_time"
-    private const val IS_ACTIVE = "is_active"
 
 
     fun getLockedApps(context: Context): List<String> {
@@ -49,43 +51,36 @@ object PreferencesManager {
 
     fun setupLockSettings(
         context: Context,
-        endTime: Long,
-        lockedApps: List<App>,
-        allowedApps: List<App>,
+        apps: List<App>,
         lastTime: Int
     ) {
-        var dataLocked = ""
-        lockedApps.forEach {
-            dataLocked += it.packageName + "/"
-        }
-        // com.android.settings
 
-        var dataAllowed = ""
-        allowedApps.forEach {
-            dataAllowed += it.packageName + "/"
-        }
+        val endTime = System.currentTimeMillis() + lastTime * 60000
+        val allApps = AppFetcher.getAllInstalledApplications(context)
+
+        val blockedApps = apps.filter { it.selected }
+            .joinToString("/") { it.packageName }
+
+        val allowedApps = allApps.filter {
+            it.packageName !in blockedApps
+        }.joinToString("/") { it.packageName }
+
 
         PreferenceManager.getDefaultSharedPreferences(context)
             .edit()
-            .putString(LOCKED_APPS, dataLocked)
-            .putString(ALLOWED_APPS, dataAllowed)
+            .putString(LOCKED_APPS, blockedApps)
+            .putString(ALLOWED_APPS, allowedApps)
             .putLong(END_TIME, endTime)
             .putInt(LAST_TIME, lastTime)
-            .putBoolean(IS_ACTIVE, true)
             .apply()
     }
 
-    fun getActivity(context: Context): Boolean {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-            .getBoolean(IS_ACTIVE, false)
+    fun isActive(context: Context): Boolean {
+        val lastTime = PreferenceManager.getDefaultSharedPreferences(context)
+            .getLong(END_TIME, 0)
+        return lastTime > System.currentTimeMillis()
     }
 
-    fun setActivity(context: Context, isActive: Boolean) {
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .edit()
-            .putBoolean(IS_ACTIVE, isActive)
-            .apply()
-    }
 
     /*
     fun setEndTime(context: Context, time: Long) {

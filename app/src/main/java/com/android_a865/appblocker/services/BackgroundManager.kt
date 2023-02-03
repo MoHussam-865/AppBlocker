@@ -31,11 +31,12 @@ object BackgroundManager {
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun startService(context: Context) {
-        if (PreferencesManager.getActivity(context)) {
+        if (PreferencesManager.isActive(context)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
                     val intent = Intent(context, ServiceAppLockJobIntent::class.java)
-                    ServiceAppLockJobIntent.enqueueWork(context, intent)
+                    context.startForegroundService(intent)
+                    //ServiceAppLockJobIntent.enqueueWork(context, intent)
                 }
             } else {
                 if (!isServiceRunning(context, ServiceAppLock::class.java)) {
@@ -45,8 +46,10 @@ object BackgroundManager {
             startAlarmManager(context)
             Log.d("app_running", "service started")
         }
+        else stopService(context)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun stopService(context: Context) {
 
         val serviceClass = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -57,7 +60,7 @@ object BackgroundManager {
         if (isServiceRunning(context, serviceClass)) {
             context.stopService(Intent(context, serviceClass))
             stopAlarm(context)
-            Log.d("app running", "service stopped")
+            Log.d("app_running", "service stopped")
         }
     }
 
@@ -75,9 +78,15 @@ object BackgroundManager {
             pendingIntent
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun stopAlarm(context: Context) {
         val intent = Intent(context, RestartServiceWhenStopped::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, ALARM_ID, intent, 0)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            ALARM_ID,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
         val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         manager.cancel(pendingIntent)
     }

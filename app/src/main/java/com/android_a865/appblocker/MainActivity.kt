@@ -1,11 +1,16 @@
 package com.android_a865.appblocker
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.AppFetcher
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
@@ -18,14 +23,19 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
-    private val blockedAppsAdapter = BlockedAppsAdapter(this)
     private var installedApps = ArrayList<App>()
+    private lateinit var blockedAppsAdapter: BlockedAppsAdapter
+
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        blockedAppsAdapter = BlockedAppsAdapter(this, this)
+
+        requestPermissions()
 
         getApplications()
 
@@ -43,7 +53,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 setHasFixedSize(true)
             }
 
-
             start.setOnClickListener {
                 try {
                     block(
@@ -54,7 +63,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 }
 
             }
-
 
         }
     }
@@ -99,44 +107,21 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         installedApps = sortedArray
 
-        blockedAppsAdapter.submitList(installedApps as List<App>)
+        blockedAppsAdapter.submitList(installedApps)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     @OptIn(DelicateCoroutinesApi::class)
     private fun block(time: Int) {
-        val blockedApps = installedApps.filter { it.selected }
 
-        /*val arrayList = ArrayList<App>()
-        installedApps.filter { it.selected }.forEach {
-            arrayList.add(it)
-        }
-        arrayList.add(App(
-            getDrawable(R.drawable.ic_edit)!!,
-            "settings",
-            "com.android.settings"
-        ))
-        val blockedApps = arrayList
-        */
-
-        if (blockedApps.isNotEmpty()) {
+        if (installedApps.any { it.selected }) {
             Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
+            refresh()
 
             GlobalScope.launch {
-                val endTime = System.currentTimeMillis() + time * 60000
-
-                val allApps = AppFetcher
-                    .getAllInstalledApplications(this@MainActivity)
-                val blockedAppsPackage = blockedApps.map { it.packageName }
-                val allowedApps = allApps.filter {
-                    it.packageName !in blockedAppsPackage
-                }
-
                 PreferencesManager.setupLockSettings(
                     this@MainActivity,
-                    endTime,
-                    blockedApps,
-                    allowedApps,
+                    installedApps,
                     time
                 )
                 BackgroundManager.instance?.startService(this@MainActivity)
@@ -150,4 +135,14 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         //val intent = Intent(this@MainActivity, )
     }
 
+
+    private fun requestPermissions() {
+        val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
+        if (!mDPM.isAdminActive(adminName)) {
+            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
+            startActivityForResult(intent, 0)
+        }
+    }
 }

@@ -29,8 +29,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-*/
-/**
+*
  * This activity provides a comprehensive UI for exploring and operating the DevicePolicyManager
  * api.  It consists of two primary modules:
  *
@@ -39,7 +38,7 @@ import java.util.List;
  *
  * 2:  A DeviceAdminReceiver, to receive updates from the DevicePolicyManager when certain aspects
  *     of the device security status have changed.
- *//*
+
 
 public class DeviceAdminSample extends PreferenceActivity {
 
@@ -106,20 +105,18 @@ public class DeviceAdminSample extends PreferenceActivity {
         mDeviceAdminSample = new ComponentName(this, DeviceAdminSampleReceiver.class);
     }
 
-    */
-/**
+*
      * We override this method to provide PreferenceActivity with the top-level preference headers.
-     *//*
+
 
     @Override
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.device_admin_headers, target);
     }
 
-    */
-/**
+*
      * Helper to determine if we are an active admin
-     *//*
+
 
     private boolean isActiveAdmin() {
         return mDPM.isAdminActive(mDeviceAdminSample);
@@ -134,13 +131,12 @@ public class DeviceAdminSample extends PreferenceActivity {
                 || EncryptionFragment.class.getName().equals(fragmentName);
     }
 
-    */
-/**
+*
      * Common fragment code for DevicePolicyManager access.  Provides two shared elements:
      *
      *   1.  Provides instance variables to access activity/context, DevicePolicyManager, etc.
      *   2.  Provides support for the "set password" button(s) shared by multiple fragments.
-     *//*
+
 
     public static class AdminSampleFragment extends PreferenceFragment
             implements OnPreferenceChangeListener, OnPreferenceClickListener{
@@ -188,11 +184,10 @@ public class DeviceAdminSample extends PreferenceActivity {
             }
         }
 
-        */
-/**
+*
          * Called automatically at every onResume.  Should also call explicitly any time a
          * policy changes that may affect other policy values.
-         *//*
+
 
         protected void reloadSummaries() {
             if (mSetPassword != null) {
@@ -235,11 +230,10 @@ public class DeviceAdminSample extends PreferenceActivity {
             return false;
         }
 
-        */
-/**
+*
          * This is dangerous, so we prevent automated tests from doing it, and we
          * remind the user after we do it.
-         *//*
+
 
         private void doResetPassword(String newPassword) {
             if (alertIfMonkey(mActivity, R.string.monkey_reset_password)) {
@@ -253,20 +247,18 @@ public class DeviceAdminSample extends PreferenceActivity {
             builder.show();
         }
 
-        */
-/**
+*
          * Simple helper for summaries showing local & global (aggregate) policy settings
-         *//*
+
 
         protected String localGlobalSummary(Object local, Object global) {
             return getString(R.string.status_local_global, local, global);
         }
     }
 
-    */
-/**
+*
      * PreferenceFragment for "general" preferences.
-     *//*
+
 
     public static class GeneralFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener {
@@ -463,8 +455,7 @@ public class DeviceAdminSample extends PreferenceActivity {
             mTrustAgentFeatures.setEnabled(trustDisabled);
         }
 
-        */
-/** Updates the device capabilities area (dis/enabling) as the admin is (de)activated *//*
+* Updates the device capabilities area (dis/enabling) as the admin is (de)activated
 
         private void enableDeviceCapabilitiesArea(boolean enabled) {
             mDisableCameraCheckbox.setEnabled(enabled);
@@ -478,10 +469,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
-/**
+*
      * PreferenceFragment for "password quality" preferences.
-     *//*
+
 
     public static class QualityFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener {
@@ -555,10 +545,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             mQualityCategory.setEnabled(mAdminActive);
         }
 
-        */
-/**
+*
          * Update the summaries of each item to show the local setting and the global setting.
-         *//*
+
 
         @Override
         protected void reloadSummaries() {
@@ -642,10 +631,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
-/**
+*
      * PreferenceFragment for "password expiration" preferences.
-     *//*
+
 
     public static class ExpirationFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener, OnPreferenceClickListener {
@@ -675,10 +663,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             mExpirationCategory.setEnabled(mAdminActive);
         }
 
-        */
-/**
+*
          * Update the summaries of each item to show the local setting and the global setting.
-         *//*
+
 
         @Override
         protected void reloadSummaries() {
@@ -738,11 +725,10 @@ public class DeviceAdminSample extends PreferenceActivity {
             return false;
         }
 
-        */
-/**
+*
          * Create a summary string describing the expiration status for the sample app,
          * as well as the global (aggregate) status.
-         *//*
+
 
         private String getExpirationStatus() {
             // expirations are absolute;  convert to relative for display
@@ -781,10 +767,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
-/**
+*
      * PreferenceFragment for "lock screen & wipe" preferences.
-     *//*
+
 
     public static class LockWipeFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener, OnPreferenceClickListener {
@@ -820,10 +805,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             mLockWipeCategory.setEnabled(mAdminActive);
         }
 
-        */
-/**
+*
          * Update the summaries of each item to show the local setting and the global setting.
-         *//*
+
 
         @Override
         protected void reloadSummaries() {
@@ -891,10 +875,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             return false;
         }
 
-        */
-/**
+*
          * Wiping data is real, so we don't want it to be easy.  Show two alerts before wiping.
-         *//*
+
 
         private void promptForRealDeviceWipe(final boolean wipeAllData) {
             final DeviceAdminSample activity = mActivity;
@@ -931,10 +914,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
-/**
+*
      * PreferenceFragment for "encryption" preferences.
-     *//*
+
 
     public static class EncryptionFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener, OnPreferenceClickListener {
@@ -962,10 +944,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             mRequireEncryption.setChecked(mDPM.getStorageEncryption(mDeviceAdminSample));
         }
 
-        */
-/**
+*
          * Update the summaries of each item to show the local setting and the global setting.
-         *//*
+
 
         @Override
         protected void reloadSummaries() {
@@ -1043,10 +1024,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
-/**
+*
      * Simple converter used for long expiration times reported in mSec.
-     *//*
+
 
     private static String timeToDaysMinutesSeconds(Context context, long time) {
         long days = time / MS_PER_DAY;
@@ -1055,11 +1035,10 @@ public class DeviceAdminSample extends PreferenceActivity {
         return context.getString(R.string.status_days_hours_minutes, days, hours, minutes);
     }
 
-    */
-/**
+*
      * If the "user" is a monkey, post an alert and notify the caller.  This prevents automated
      * test frameworks from stumbling into annoying or dangerous operations.
-     *//*
+
 
     private static boolean alertIfMonkey(Context context, int stringId) {
         if (ActivityManager.isUserAMonkey()) {
@@ -1073,7 +1052,7 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
     }
 
-    */
+*/
 /**
      * Sample implementation of a DeviceAdminReceiver.  Your controller must provide one,
      * although you may or may not implement all of the methods shown here.
@@ -1081,6 +1060,9 @@ public class DeviceAdminSample extends PreferenceActivity {
      * All callbacks are on the UI thread and your implementations should not engage in any
      * blocking operations, including disk I/O.
      *//*
+*/
+/**//*
+
 
     public static class DeviceAdminSampleReceiver extends DeviceAdminReceiver {
         void showToast(Context context, String msg) {
