@@ -1,22 +1,20 @@
 package com.android_a865.appblocker.services
 
+import android.app.IntentService
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.os.IBinder
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.android_a865.appblocker.broadcasts.ReceiverAppLock
 import com.android_a865.appblocker.common.PreferencesManager
 
 
-class ServiceAppLock : Service() {
+class ServiceAppLock : IntentService("ServiceAppLock") {
 
     private fun runAppLock() {
         val endTime = PreferencesManager.getEndTime(this)
@@ -51,15 +49,14 @@ class ServiceAppLock : Service() {
         super.onTaskRemoved(rootIntent)
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onHandleIntent(intent: Intent?) {  }
+
     @RequiresApi(Build.VERSION_CODES.M)
     @Deprecated("Deprecated in Java")
     override fun onDestroy() {
         BackgroundManager.instance?.startService(this)
         super.onDestroy()
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
     }
 
     private fun startForeground(context: Context) {

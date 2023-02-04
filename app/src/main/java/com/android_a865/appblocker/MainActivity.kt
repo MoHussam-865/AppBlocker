@@ -31,7 +31,8 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
-    private var installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
+    private val installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
+    private val isActive = MutableLiveData(false)
     private var apps
         get() = installedApps.value!!
         set(value) { installedApps.value = value }
@@ -76,57 +77,50 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         installedApps.observe(this) { list ->
-
             blockedAppsAdapter.submitList(list)
-
 
             PreferencesManager.setLockedApps(
                 this@MainActivity,
-                apps.filter {app -> app.selected }
+                list.filter {app -> app.selected }
             )
         }
+
+        isActive.observe(this) {
+            blockedAppsAdapter.isActive = it
+        }
+
+        isActive.value = PreferencesManager.isActive(this)
     }
 
     private fun getApplications() {
-        apps = AppFetcher.getApps(this)
-                as ArrayList<App>
+        val allApps = AppFetcher.getApps(this) as ArrayList<App>
         val packages = PreferencesManager.getLockedApps(this)
 
-        apps.forEach {
+        allApps.forEach {
             if (packages.contains(it.packageName)) {
                 it.selected = true
             }
         }
+        apps = rearrange(allApps)
         //refresh()
     }
 
     override fun onItemClicked(app: App, isChecked: Boolean) {
-
         lifecycleScope.launch {
             apps.forEachIndexed { index, application ->
                 if (application.packageName == app.packageName) {
                     apps[index] = application.copy(selected = isChecked)
                 }
             }
-
-            /*PreferencesManager.setLockedApps(
-                this@MainActivity,
-                apps.filter { it.selected }
-            )
-            refresh()*/
+            apps = rearrange(apps)
         }
     }
 
-    private fun refresh() {
+    private fun rearrange(list: List<App>): ArrayList<App> {
         val sortedArray = ArrayList<App>()
-
-        sortedArray.addAll(apps.filter { it.selected })
-        sortedArray.addAll(apps.filter { !it.selected }.sortedBy { it.name })
-
-        apps = sortedArray
-
-        //blockedAppsAdapter.submitList(apps)
-        Log.d("app_running", "list refreshed")
+        sortedArray.addAll(list.filter { it.selected })
+        sortedArray.addAll(list.filter { !it.selected }.sortedBy { it.name })
+        return sortedArray
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -141,14 +135,12 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                     time
                 )
                 BackgroundManager.instance?.startService(this@MainActivity)
+                isActive.value = true
             }
         }
-
         else {
             Toast.makeText(this,"No apps selected",Toast.LENGTH_SHORT).show()
         }
-
-        //val intent = Intent(this@MainActivity, )
     }
 
 

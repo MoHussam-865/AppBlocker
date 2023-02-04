@@ -12,7 +12,7 @@ import com.android_a865.appblocker.models.App
 class BlockedAppsAdapter(
     private val listener: OnItemEventListener,
 ) : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(InvoiceDiffCallback()) {
-
+    var isActive = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -45,14 +45,17 @@ class BlockedAppsAdapter(
                 image.setImageDrawable(app.icon)
                 appName.text = app.name
                 isBlocked.isChecked = app.selected
+                isBlocked.isEnabled = !isActive
             }
         }
     }
 
 
     class InvoiceDiffCallback : DiffUtil.ItemCallback<App>() {
-        override fun areItemsTheSame(oldItem: App, newItem: App): Boolean =
-            oldItem.name == newItem.name
+        override fun areItemsTheSame(oldItem: App, newItem: App): Boolean {
+            return (oldItem.name == newItem.name) &&
+                    (oldItem.selected == newItem.selected)
+        }
 
         override fun areContentsTheSame(oldItem: App, newItem: App): Boolean =
             oldItem == newItem
