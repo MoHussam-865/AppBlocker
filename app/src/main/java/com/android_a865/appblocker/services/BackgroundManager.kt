@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.broadcasts.RestartServiceWhenStopped
 import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.utils.isServiceRunning
 
 
 object BackgroundManager {
@@ -24,15 +25,6 @@ object BackgroundManager {
         }
         private set
 
-    private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (serviceInfo in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == serviceInfo.service.className) {
-                return true
-            }
-        }
-        return false
-    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun startService(context: Context) {
@@ -55,8 +47,6 @@ object BackgroundManager {
         if (isServiceRunning(context, serviceClass)) {
             context.stopService(Intent(context, serviceClass))
             stopAlarm(context)
-            context.startService(Intent(context, ServiceEndNotifier::class.java))
-
             Log.d("app_running", "service stopped")
         }
     }

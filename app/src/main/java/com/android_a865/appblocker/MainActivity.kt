@@ -3,22 +3,18 @@ package com.android_a865.appblocker
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.admin.DevicePolicyManager
-import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
 import android.os.Process.myUid
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LiveData
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,8 +24,9 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.services.ServiceEndNotifier
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.android_a865.appblocker.utils.isAccessibilitySettingsOn
+import com.android_a865.appblocker.utils.xyz
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -133,7 +130,8 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     @RequiresApi(Build.VERSION_CODES.M)
     private fun block(time: Int) {
 
-        if (time > (24 * 60 * 1000)) {
+        // time is in minute, the day has (24*60) minute
+        if (time > (24 * 60)) {
             Toast.makeText(
                 this,
                 "Can't block for more than 1 day",
@@ -143,15 +141,20 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         if (apps.any { it.selected }) {
+            // disable checkBoxes
+            isActive.value = true
             Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
+                // saves the data to start blocking
                 PreferencesManager.setupLockSettings(
                     this@MainActivity,
                     apps,
                     time
                 )
+                // enable the checkBoxes when service ends
+                observeList()
+                // start the blocking service
                 BackgroundManager.instance?.startService(this@MainActivity)
-                isActive.value = true
             }
         }
         else {
@@ -162,7 +165,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun requestPermissions() {
-
+        // Usage State permission needed to know the current running app
         val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         val mode = appOpsManager.checkOpNoThrow(
             AppOpsManager.OPSTR_GET_USAGE_STATS,
@@ -173,6 +176,14 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
 
+        /*if (!isAccessibilitySettingsOn(this)) {
+            startActivityForResult(
+                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+                156
+            )
+        }*/
+
+        // display over other apps
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -181,7 +192,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             startActivityForResult(intent, 0)
         }
 
-
+        // admin permission
         val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
         if (!mDPM.isAdminActive(adminName)) {
@@ -190,16 +201,18 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             startActivityForResult(intent, 0)
         }
 
+        xyz(this)
 
     }
 
-    /*
-    inner class ServiceEnd: BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ServiceEndNotifier.END_MSG) {
-                isActive.value = false
+    private fun observeList() {
+        lifecycleScope.launch {
+            val endTime = PreferencesManager.getEndTime(this@MainActivity)
+            while (endTime > System.currentTimeMillis()) {
+                delay(3000)
             }
+            isActive.value = false
         }
     }
-    */
+
 }

@@ -11,9 +11,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.provider.Settings
+import android.text.TextUtils.SimpleStringSplitter
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat.getSystemService
+import com.android_a865.appblocker.services.MyAccessibilityService
 import java.util.*
 
 
@@ -42,6 +44,34 @@ import java.util.*
 
 }
 */
+
+fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+    val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    for (serviceInfo in manager.getRunningServices(Int.MAX_VALUE)) {
+        if (serviceClass.name == serviceInfo.service.className) {
+            return true
+        }
+    }
+    return false
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun createNotificationChannel(context: Context): String {
+    val channelId = "my_service"
+    val channelName = "My Background Service"
+    val channel = NotificationChannel(
+        channelId,
+        channelName,
+        NotificationManager.IMPORTANCE_DEFAULT
+    )
+    channel.lightColor = Color.BLUE
+    channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+    val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    service.createNotificationChannel(channel)
+    return channelId
+}
+
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun getForegroundApp(context: Context): String {
@@ -86,4 +116,33 @@ fun killPackageIfRunning(context: Context, packageName: String) {
     startMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
     context.startActivity(startMain)
     activityManager.killBackgroundProcesses(packageName)
+}
+
+
+fun isAccessibilitySettingsOn(context: Context): Boolean {
+    var accessibilityEnabled = 0
+    val service = "${context.packageName}/${MyAccessibilityService::class.java.canonicalName}"
+    try {
+        accessibilityEnabled = Settings.Secure.getInt(
+            context.applicationContext.contentResolver,
+            Settings.Secure.ACCESSIBILITY_ENABLED
+        )
+    } catch (e: Exception) {  }
+
+    val mStringColonSplitter = SimpleStringSplitter(':')
+    if (accessibilityEnabled == 1) {
+        val settingValue: String = Settings.Secure.getString(
+            context.applicationContext.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
+        mStringColonSplitter.setString(settingValue)
+        while (mStringColonSplitter.hasNext()) {
+            val accessibilityService = mStringColonSplitter.next()
+
+            if (accessibilityService.equals(service, ignoreCase = true)) {
+                return true
+            }
+        }
+    }
+    return false
 }

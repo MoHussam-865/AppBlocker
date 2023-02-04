@@ -21,20 +21,18 @@ class ReceiverAppLock : BroadcastReceiver() {
         val allowedApps = PreferencesManager.getAllowedApps(context)
         //val lockedApps = PreferencesManager.getLockedApps(context)
 
-        if (appRunning != "") {
-            // The App is not allowed
-            if (!allowedApps.contains(appRunning)) {
+        if (appRunning != "" && !allowedApps.contains(appRunning)) {
 
-                Thread.sleep(1000)
-                killPackageIfRunning(context, appRunning)
-                Toast.makeText(
-                    context,
-                    "App Blocker: you are blocked",
-                    Toast.LENGTH_SHORT
-                ).show()
-                Log.d("app_running", "app blocked")
-                Thread.sleep(5000)
-            }
+            Thread.sleep(1000)
+            killPackageIfRunning(context, appRunning)
+            Toast.makeText(
+                context,
+                "App Blocker: you are blocked",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.d("app_running", "app blocked")
+            Thread.sleep(5000)
+
         }
     }
 }

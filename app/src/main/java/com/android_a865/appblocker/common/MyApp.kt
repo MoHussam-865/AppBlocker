@@ -7,4 +7,9 @@ import com.android_a865.appblocker.services.BackgroundManager
 
 
 class MyApp: Application() {
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onCreate() {
+        super.onCreate()
+        BackgroundManager.instance?.startService(applicationContext)
+    }
 }
