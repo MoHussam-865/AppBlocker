@@ -43,14 +43,22 @@ import java.util.*
 }
 */
 
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun getForegroundApp(context: Context): String {
     var currentApp = ""
-    @SuppressLint("WrongConstant") val usm =
-        context.getSystemService("usagestats") as UsageStatsManager?
-    val time = System.currentTimeMillis()
+    //"usagestats"
+    @SuppressLint("WrongConstant")
+    val usm = context.getSystemService("usagestats")
+            as UsageStatsManager?
     assert(usm != null)
-    val appList =
-        usm!!.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
+
+    val time = System.currentTimeMillis()
+
+    val appList = usm!!.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY,
+        time - 1000 * 1000,
+        time
+    )
     if (appList != null && appList.size > 0) {
         val mySortedMap: SortedMap<Long, UsageStats> = TreeMap()
         for (usageStats in appList) {
@@ -62,13 +70,13 @@ fun getForegroundApp(context: Context): String {
     } else {
         val am = (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?)!!
         val tasks = am.runningAppProcesses
-        currentApp = tasks[0].processName
+        if (!tasks.isNullOrEmpty()) {
+            currentApp = tasks[0].processName
+        }
     }
 
     Log.d("running Foreground", "Current App in foreground is: $currentApp")
     return currentApp
-
-
 }
 
 fun killPackageIfRunning(context: Context, packageName: String) {

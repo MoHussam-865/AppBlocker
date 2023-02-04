@@ -35,8 +35,7 @@ object BackgroundManager {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
                     val intent = Intent(context, ServiceAppLockJobIntent::class.java)
-                    context.startForegroundService(intent)
-                    //ServiceAppLockJobIntent.enqueueWork(context, intent)
+                    ServiceAppLockJobIntent.enqueueWork(context, intent)
                 }
             } else {
                 if (!isServiceRunning(context, ServiceAppLock::class.java)) {

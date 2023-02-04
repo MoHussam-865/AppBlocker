@@ -1,21 +1,17 @@
 package com.android_a865.appblocker
 
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.AdapterBlockedAppsBinding
 import com.android_a865.appblocker.models.App
 
 class BlockedAppsAdapter(
     private val listener: OnItemEventListener,
-    private val context: Context
 ) : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(InvoiceDiffCallback()) {
-    private var isActive = false
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -49,17 +45,10 @@ class BlockedAppsAdapter(
                 image.setImageDrawable(app.icon)
                 appName.text = app.name
                 isBlocked.isChecked = app.selected
-                isBlocked.isEnabled = !(app.selected && isActive)
             }
         }
     }
 
-
-
-    override fun submitList(list: MutableList<App>?) {
-        isActive = PreferencesManager.isActive(context)
-        super.submitList(list)
-    }
 
     class InvoiceDiffCallback : DiffUtil.ItemCallback<App>() {
         override fun areItemsTheSame(oldItem: App, newItem: App): Boolean =

@@ -1,14 +1,22 @@
 package com.android_a865.appblocker
 
+import android.app.AppOpsManager
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Process.myUid
+import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.AppFetcher
@@ -17,14 +25,18 @@ import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
-    private var installedApps = ArrayList<App>()
-    private lateinit var blockedAppsAdapter: BlockedAppsAdapter
+    private var installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
+    private var apps
+        get() = installedApps.value!!
+        set(value) { installedApps.value = value }
+
+    private val blockedAppsAdapter = BlockedAppsAdapter(this)
 
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -33,10 +45,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        blockedAppsAdapter = BlockedAppsAdapter(this, this)
-
         requestPermissions()
-
         getApplications()
 
         binding.apply {
@@ -65,63 +74,70 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             }
 
         }
+
+        installedApps.observe(this) { list ->
+
+            blockedAppsAdapter.submitList(list)
+
+
+            PreferencesManager.setLockedApps(
+                this@MainActivity,
+                apps.filter {app -> app.selected }
+            )
+        }
     }
 
     private fun getApplications() {
-        installedApps = AppFetcher.getApps(this)
+        apps = AppFetcher.getApps(this)
                 as ArrayList<App>
         val packages = PreferencesManager.getLockedApps(this)
 
-        installedApps.forEach {
+        apps.forEach {
             if (packages.contains(it.packageName)) {
                 it.selected = true
             }
         }
-        refresh()
+        //refresh()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onItemClicked(app: App, isChecked: Boolean) {
 
-        GlobalScope.launch {
-            installedApps.forEachIndexed { index, application ->
+        lifecycleScope.launch {
+            apps.forEachIndexed { index, application ->
                 if (application.packageName == app.packageName) {
-                    installedApps[index] = application.copy(selected = isChecked)
+                    apps[index] = application.copy(selected = isChecked)
                 }
             }
 
-            PreferencesManager.setLockedApps(
+            /*PreferencesManager.setLockedApps(
                 this@MainActivity,
-                installedApps.filter { it.selected }
+                apps.filter { it.selected }
             )
-            refresh()
+            refresh()*/
         }
-
     }
 
     private fun refresh() {
         val sortedArray = ArrayList<App>()
 
-        sortedArray.addAll(installedApps.filter { it.selected })
-        sortedArray.addAll(installedApps.filter { !it.selected }.sortedBy { it.name })
+        sortedArray.addAll(apps.filter { it.selected })
+        sortedArray.addAll(apps.filter { !it.selected }.sortedBy { it.name })
 
-        installedApps = sortedArray
+        apps = sortedArray
 
-        blockedAppsAdapter.submitList(installedApps)
+        //blockedAppsAdapter.submitList(apps)
+        Log.d("app_running", "list refreshed")
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    @OptIn(DelicateCoroutinesApi::class)
     private fun block(time: Int) {
 
-        if (installedApps.any { it.selected }) {
+        if (apps.any { it.selected }) {
             Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
-            refresh()
-
-            GlobalScope.launch {
+            lifecycleScope.launch {
                 PreferencesManager.setupLockSettings(
                     this@MainActivity,
-                    installedApps,
+                    apps,
                     time
                 )
                 BackgroundManager.instance?.startService(this@MainActivity)
@@ -136,7 +152,28 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun requestPermissions() {
+
+        val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOpsManager.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            myUid(),
+            packageName
+        )
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivityForResult(intent, 0)
+        }
+
+
         val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
         if (!mDPM.isAdminActive(adminName)) {
@@ -144,5 +181,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
             startActivityForResult(intent, 0)
         }
+
+
     }
 }

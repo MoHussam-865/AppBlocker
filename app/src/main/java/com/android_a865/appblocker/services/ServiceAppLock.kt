@@ -28,7 +28,7 @@ class ServiceAppLock : Service() {
                     if (isActive) {
                         val intent = Intent(this, ReceiverAppLock::class.java)
                         sendBroadcast(intent)
-                        Log.d("app running", "is Active")
+                        Thread.sleep(1500)
                     }
                 } catch (e: InterruptedException) {
                     e.printStackTrace()

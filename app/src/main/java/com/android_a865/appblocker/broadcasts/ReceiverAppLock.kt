@@ -34,7 +34,8 @@ class ReceiverAppLock : BroadcastReceiver() {
                     "App Blocker: you are blocked",
                     Toast.LENGTH_SHORT
                 ).show()
-                Log.d("app_running", "service is running")
+                Log.d("app_running", "app blocked")
+                Thread.sleep(5000)
             }
         } else {
             BackgroundManager.instance?.stopService(context)
