@@ -45,7 +45,7 @@ class BlockedAppsAdapter(
                 image.setImageDrawable(app.icon)
                 appName.text = app.name
                 isBlocked.isChecked = app.selected
-                isBlocked.isEnabled = !isActive
+                isBlocked.isEnabled = !(app.selected && isActive)
             }
         }
     }

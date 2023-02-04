@@ -20,10 +20,8 @@ class ReceiverAppLock : BroadcastReceiver() {
         val appRunning = getForegroundApp(context)
         val allowedApps = PreferencesManager.getAllowedApps(context)
         //val lockedApps = PreferencesManager.getLockedApps(context)
-        val isActive = PreferencesManager.isActive(context)
 
-
-        if (isActive && appRunning != "") {
+        if (appRunning != "") {
             // The App is not allowed
             if (!allowedApps.contains(appRunning)) {
 
@@ -37,9 +35,6 @@ class ReceiverAppLock : BroadcastReceiver() {
                 Log.d("app_running", "app blocked")
                 Thread.sleep(5000)
             }
-        } else {
-            BackgroundManager.instance?.stopService(context)
         }
-
     }
 }

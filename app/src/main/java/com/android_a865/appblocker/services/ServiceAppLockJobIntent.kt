@@ -13,6 +13,9 @@ import androidx.core.app.JobIntentService
 import androidx.core.app.NotificationCompat
 import com.android_a865.appblocker.broadcasts.ReceiverAppLock
 import com.android_a865.appblocker.common.PreferencesManager
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class ServiceAppLockJobIntent : JobIntentService() {
@@ -34,23 +37,27 @@ class ServiceAppLockJobIntent : JobIntentService() {
         super.onDestroy()
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun runAppLock() {
         val endTime = PreferencesManager.getEndTime(this)
+
         while (System.currentTimeMillis() < endTime) {
             synchronized(this) {
                 try {
 
-                    val isActive = PreferencesManager.isActive(this)
-                    if (isActive) {
-                        val intent = Intent(this, ReceiverAppLock::class.java)
-                        sendBroadcast(intent)
-                        Log.d("app running", "is Active")
-                    }
+                    val intent = Intent(this, ReceiverAppLock::class.java)
+                    sendBroadcast(intent)
+                    Thread.sleep(1500)
+
+                    Log.d("app running", "is Active")
+
                 } catch (e: InterruptedException) {
                     e.printStackTrace()
                 }
             }
         }
+
+        BackgroundManager.instance?.stopService(this)
     }
 
     companion object {
@@ -78,7 +85,7 @@ class ServiceAppLockJobIntent : JobIntentService() {
                 ""
             }
 
-        val notification = NotificationCompat.Builder(context, channelId )
+        val notification = NotificationCompat.Builder(context, channelId)
             .setOngoing(true)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("App Blocker")
@@ -89,11 +96,14 @@ class ServiceAppLockJobIntent : JobIntentService() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(): String{
+    private fun createNotificationChannel(): String {
         val channelId = "my_service"
         val channelName = "My Background Service"
-        val channel = NotificationChannel(channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE)
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
         channel.lightColor = Color.BLUE
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

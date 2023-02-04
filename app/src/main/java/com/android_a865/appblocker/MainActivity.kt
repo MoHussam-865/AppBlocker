@@ -1,13 +1,17 @@
 package com.android_a865.appblocker
 
+import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.admin.DevicePolicyManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.os.Process.myUid
 import android.provider.Settings
 import android.util.Log
@@ -24,6 +28,7 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
+import com.android_a865.appblocker.services.ServiceEndNotifier
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -40,6 +45,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
 
 
+    @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +93,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         isActive.observe(this) {
             blockedAppsAdapter.isActive = it
+            blockedAppsAdapter.notifyDataSetChanged()
         }
 
         isActive.value = PreferencesManager.isActive(this)
@@ -125,6 +132,15 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun block(time: Int) {
+
+        if (time > (24 * 60 * 1000)) {
+            Toast.makeText(
+                this,
+                "Can't block for more than 1 day",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
 
         if (apps.any { it.selected }) {
             Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
@@ -176,4 +192,14 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
 
     }
+
+    /*
+    inner class ServiceEnd: BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ServiceEndNotifier.END_MSG) {
+                isActive.value = false
+            }
+        }
+    }
+    */
 }

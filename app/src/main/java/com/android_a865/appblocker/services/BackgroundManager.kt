@@ -14,10 +14,15 @@ import com.android_a865.appblocker.common.PreferencesManager
 
 object BackgroundManager {
 
-    const val NOTIFICATION_ID = 1
-    const val NOTIFICATION_CHANNEL_ID = "channelId"
     private const val period = 15 * 1000
     private const val ALARM_ID = 159874
+
+    var instance: BackgroundManager? = null
+        get() {
+            if (field == null) field = BackgroundManager
+            return field
+        }
+        private set
 
     private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -32,33 +37,26 @@ object BackgroundManager {
     @RequiresApi(Build.VERSION_CODES.M)
     fun startService(context: Context) {
         if (PreferencesManager.isActive(context)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
-                    val intent = Intent(context, ServiceAppLockJobIntent::class.java)
-                    ServiceAppLockJobIntent.enqueueWork(context, intent)
-                }
-            } else {
-                if (!isServiceRunning(context, ServiceAppLock::class.java)) {
-                    context.startService(Intent(context, ServiceAppLock::class.java))
-                }
+            if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
+
+                val intent = Intent(context, ServiceAppLockJobIntent::class.java)
+                ServiceAppLockJobIntent.enqueueWork(context, intent)
+                startAlarmManager(context)
+
+                Log.d("app_running", "service started")
             }
-            startAlarmManager(context)
-            Log.d("app_running", "service started")
-        }
-        else stopService(context)
+        } else stopService(context)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun stopService(context: Context) {
-
-        val serviceClass = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ServiceAppLockJobIntent::class.java
-        } else ServiceAppLock::class.java
-
+        val serviceClass = ServiceAppLockJobIntent::class.java
 
         if (isServiceRunning(context, serviceClass)) {
             context.stopService(Intent(context, serviceClass))
             stopAlarm(context)
+            context.startService(Intent(context, ServiceEndNotifier::class.java))
+
             Log.d("app_running", "service stopped")
         }
     }
@@ -89,12 +87,5 @@ object BackgroundManager {
         val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         manager.cancel(pendingIntent)
     }
-
-    var instance: BackgroundManager? = null
-        get() {
-            if (field == null) field = BackgroundManager
-            return field
-        }
-        private set
 
 }
