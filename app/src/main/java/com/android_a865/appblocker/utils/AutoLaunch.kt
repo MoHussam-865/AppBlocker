@@ -9,7 +9,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat.startActivity
 
 
-fun xyz(context: Context) {
+fun autoLaunchPermissionRequest(context: Context) {
     val manufacturer = Build.MANUFACTURER
     try {
         val intent = Intent()

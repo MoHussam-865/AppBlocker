@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,10 +23,8 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.utils.isAccessibilitySettingsOn
-import com.android_a865.appblocker.utils.xyz
+import com.android_a865.appblocker.utils.autoLaunchPermissionRequest
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -201,7 +198,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             startActivityForResult(intent, 0)
         }
 
-        xyz(this)
+        autoLaunchPermissionRequest(this)
 
     }
 

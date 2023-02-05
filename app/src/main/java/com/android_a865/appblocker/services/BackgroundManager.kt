@@ -1,6 +1,5 @@
 package com.android_a865.appblocker.services
 
-import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -26,14 +25,14 @@ object BackgroundManager {
         private set
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.S)
     fun startService(context: Context) {
         if (PreferencesManager.isActive(context)) {
             if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
 
                 val intent = Intent(context, ServiceAppLockJobIntent::class.java)
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
-                startAlarmManager(context)
+                startAlarm(context)
 
                 Log.d("app_running", "service started")
             }
@@ -51,18 +50,22 @@ object BackgroundManager {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun startAlarmManager(context: Context) {
+    @RequiresApi(Build.VERSION_CODES.S)
+    fun startAlarm(context: Context) {
         val intent = Intent(context, RestartServiceWhenStopped::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             ALARM_ID,
             intent,
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_MUTABLE
         )
         val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        manager[AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + period] =
+
+        manager.setExact(
+            AlarmManager.RTC_WAKEUP,
+            System.currentTimeMillis() + period,
             pendingIntent
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
