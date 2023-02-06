@@ -29,13 +29,11 @@ object BackgroundManager {
     fun startService(context: Context) {
         if (PreferencesManager.isActive(context)) {
             if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
-
                 val intent = Intent(context, ServiceAppLockJobIntent::class.java)
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
-                startAlarm(context)
-
                 Log.d("app_running", "service started")
             }
+            startAlarm(context)
         } else stopService(context)
     }
 

@@ -23,7 +23,6 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.utils.autoLaunchPermissionRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -40,7 +39,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
 
     @SuppressLint("NotifyDataSetChanged")
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
@@ -124,7 +123,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         return sortedArray
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun block(time: Int) {
 
         // time is in minute, the day has (24*60) minute
@@ -197,8 +196,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
             startActivityForResult(intent, 0)
         }
-
-        autoLaunchPermissionRequest(this)
 
     }
 
