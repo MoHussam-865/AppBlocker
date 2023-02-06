@@ -23,6 +23,8 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
+import com.android_a865.appblocker.utils.arrange
+import com.android_a865.appblocker.utils.selectApp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -33,7 +35,9 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     private val isActive = MutableLiveData(false)
     private var apps
         get() = installedApps.value!!
-        set(value) { installedApps.value = value }
+        set(value) {
+            installedApps.value = value
+        }
 
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
 
@@ -68,7 +72,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                         blockTime.editText?.text.toString().toInt()
                     )
                 } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity,"Enter Time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Enter Time", Toast.LENGTH_SHORT).show()
                 }
 
             }
@@ -80,7 +84,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
             PreferencesManager.setLockedApps(
                 this@MainActivity,
-                list.filter {app -> app.selected }
+                list.filter { app -> app.selected }
             )
         }
 
@@ -101,26 +105,12 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 it.selected = true
             }
         }
-        apps = rearrange(allApps)
+        apps = allApps.arrange()
         //refresh()
     }
 
     override fun onItemClicked(app: App, isChecked: Boolean) {
-        lifecycleScope.launch {
-            apps.forEachIndexed { index, application ->
-                if (application.packageName == app.packageName) {
-                    apps[index] = application.copy(selected = isChecked)
-                }
-            }
-            apps = rearrange(apps)
-        }
-    }
-
-    private fun rearrange(list: List<App>): ArrayList<App> {
-        val sortedArray = ArrayList<App>()
-        sortedArray.addAll(list.filter { it.selected })
-        sortedArray.addAll(list.filter { !it.selected }.sortedBy { it.name })
-        return sortedArray
+        apps = apps.selectApp(app, isChecked)
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -130,7 +120,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         if (time > (24 * 60)) {
             Toast.makeText(
                 this,
-                "Can't block for more than 1 day",
+                "Can't block for more than 24 hours",
                 Toast.LENGTH_LONG
             ).show()
             return
@@ -152,9 +142,8 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 // start the blocking service
                 BackgroundManager.instance?.startService(this@MainActivity)
             }
-        }
-        else {
-            Toast.makeText(this,"No apps selected",Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "No apps selected", Toast.LENGTH_SHORT).show()
         }
     }
 

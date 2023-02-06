@@ -15,8 +15,10 @@ import android.provider.Settings
 import android.text.TextUtils.SimpleStringSplitter
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.MyAccessibilityService
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /*class Utils(private val context: Context) {
@@ -118,6 +120,16 @@ fun killPackageIfRunning(context: Context, packageName: String) {
     activityManager.killBackgroundProcesses(packageName)
 }
 
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun killCurrentProcess(context: Context) {
+    killPackageIfRunning(
+        context,
+        getForegroundApp(
+            context
+        )
+    )
+}
+
 
 fun isAccessibilitySettingsOn(context: Context): Boolean {
     var accessibilityEnabled = 0
@@ -127,7 +139,8 @@ fun isAccessibilitySettingsOn(context: Context): Boolean {
             context.applicationContext.contentResolver,
             Settings.Secure.ACCESSIBILITY_ENABLED
         )
-    } catch (e: Exception) {  }
+    } catch (e: Exception) {
+    }
 
     val mStringColonSplitter = SimpleStringSplitter(':')
     if (accessibilityEnabled == 1) {
@@ -146,3 +159,23 @@ fun isAccessibilitySettingsOn(context: Context): Boolean {
     }
     return false
 }
+
+fun ArrayList<App>.arrange(): ArrayList<App> {
+    val sortedArray = ArrayList<App>()
+    sortedArray.addAll(filter { it.selected })
+    sortedArray.addAll(filter { !it.selected }.sortedBy { it.name })
+    return sortedArray
+}
+
+fun ArrayList<App>.selectApp(
+    app: App,
+    isChecked: Boolean
+): ArrayList<App> {
+    forEachIndexed { index, application ->
+        if (application.packageName == app.packageName) {
+            set(index,application.copy(selected = isChecked))
+        }
+    }
+    return arrange()
+}
+
