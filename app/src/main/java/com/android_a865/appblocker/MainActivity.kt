@@ -11,8 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Process.myUid
 import android.provider.Settings
-import android.util.Log
-import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -43,8 +41,8 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
 
 
+    @RequiresApi(33)
     @SuppressLint("NotifyDataSetChanged")
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
@@ -160,7 +158,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
 
 
-        /*if (!isAccessibilitySettingsOn(
+        if (!isAccessibilitySettingsOn(
                 this,
                 MyAccessibilityService::class.java
             )
@@ -169,7 +167,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
                 156
             )
-        }*/
+        }
 
         // display over other apps
         if (!Settings.canDrawOverlays(this)) {

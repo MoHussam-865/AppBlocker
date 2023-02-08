@@ -11,6 +11,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.provider.Settings
+import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.RequiresApi
@@ -24,54 +25,12 @@ import com.android_a865.appblocker.services.MyAccessibilityService
 import kotlinx.coroutines.delay
 import java.util.*
 
+private const val TAG = "app_running"
 
 fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
     val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     for (serviceInfo in manager.getRunningServices(Int.MAX_VALUE)) {
         if (serviceClass.name == serviceInfo.service.className) {
-            return true
-        }
-    }
-    return false
-}
-
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
-fun getLauncherTopApp(context: Context) {
-    /*val endTime = System.currentTimeMillis()
-    val beginTime = endTime - 10000
-
-    val usageStateManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
-            as UsageStatsManager
-
-
-    val event: UsageEvents.Event = UsageEvents.Event()
-    val usageEvents = usageStateManager.queryEvents(beginTime, endTime)
-
-    while (usageEvents.hasNextEvent()) {
-        usageEvents.getNextEvent(event)
-        Log.d("app_running", event.packageName.toString())
-    }*/
-
-}
-
-
-@RequiresApi(33)
-fun isAccessibilitySettingsOn(context: Context, service: Class<*>): Boolean {
-
-    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE)
-            as AccessibilityManager
-
-    val enabledServices = am.getEnabledAccessibilityServiceList(
-        AccessibilityServiceInfo.FEEDBACK_ALL_MASK
-    )
-
-    enabledServices.forEach {
-        val enabledServiceInfo =  it.resolveInfo.serviceInfo
-
-        if (
-            enabledServiceInfo.packageName == context.packageName &&
-                    enabledServiceInfo.name == service.name
-        ) {
             return true
         }
     }
@@ -138,6 +97,68 @@ fun getForegroundApp(context: Context): String {
 
     Log.d("running Foreground", "Current App in foreground is: $currentApp")
     return currentApp
+}
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun getForegroundAppName(context: Context): String {
+    try {
+
+        context.packageManager.apply {
+            return getApplicationLabel(
+                getApplicationInfo(
+                    getForegroundApp(context), 0
+                )
+            ).toString()
+
+        }
+
+    } catch (e: Exception) {
+        return ""
+    }
+}
+
+fun isAccessibilitySettingsOn(
+    context: Context,
+    serviceClass: Class<MyAccessibilityService>
+): Boolean {
+    var accessibilityEnabled = 0
+    //your package /   accessibility service path/class
+    val service = "${context.packageName}/${serviceClass.canonicalName}";
+
+    val accessibilityFound = false
+    try {
+        accessibilityEnabled = Settings.Secure.getInt(
+            context.applicationContext.contentResolver,
+            android.provider.Settings.Secure.ACCESSIBILITY_ENABLED);
+        Log.v(TAG, "accessibilityEnabled = $accessibilityEnabled");
+    } catch (e: Settings.SettingNotFoundException) {
+        Log.e(TAG, "Error finding setting, default accessibility to not found: "
+                + e.message);
+    }
+    val mStringColonSplitter = TextUtils.SimpleStringSplitter(':');
+
+    if (accessibilityEnabled == 1) {
+        Log.v(TAG, "***ACCESSIBILIY IS ENABLED*** -----------------");
+        val settingValue = Settings.Secure.getString(
+            context.applicationContext.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        if (settingValue != null) {
+            mStringColonSplitter.setString(settingValue)
+            while (mStringColonSplitter.hasNext()) {
+                val accessibilityService = mStringColonSplitter.next();
+
+                Log.v(TAG, "-------------- > accessibilityService :: $accessibilityService");
+                if (accessibilityService.equals(service, ignoreCase = true)) {
+                    Log.v(TAG, "We've found the correct setting - accessibility is switched on!");
+                    return true;
+                }
+            }
+        }
+    } else {
+        Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
+    }
+
+    return accessibilityFound;
 }
 
 fun killPackageIfRunning(context: Context, packageName: String) {
@@ -212,6 +233,26 @@ fun ArrayList<App>.getSelected(
 
 
 /*
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun getLauncherTopApp(context: Context) {
+    /*val endTime = System.currentTimeMillis()
+    val beginTime = endTime - 10000
+
+    val usageStateManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
+            as UsageStatsManager
+
+
+    val event: UsageEvents.Event = UsageEvents.Event()
+    val usageEvents = usageStateManager.queryEvents(beginTime, endTime)
+
+    while (usageEvents.hasNextEvent()) {
+        usageEvents.getNextEvent(event)
+        Log.d(TAG, event.packageName.toString())
+    }*/
+
+}
+
 fun isAccessibilitySettingsOn(context: Context): Boolean {
     var accessibilityEnabled = 0
     val service = "${context.packageName}/${MyAccessibilityService::class.java.canonicalName}"

@@ -26,7 +26,6 @@ object BackgroundManager {
             if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
                 val intent = Intent(context, ServiceAppLockJobIntent::class.java)
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
-                accessibility(context)
                 Log.d("app_running", "service started")
             }
 
