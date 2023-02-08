@@ -65,6 +65,9 @@
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
         </service>
 
 
@@ -76,14 +79,7 @@
         <receiver
             android:name=".broadcasts.ReceiverAppLock"
             android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.QUERY_PACKAGE_RESTART"/>
-                <action android:name="android.intent.action.PACKAGE_RESTARTED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <data android:scheme="package"/>
-            </intent-filter>
-        </receiver>
+            android:exported="true"/>
 
         <receiver
             android:name=".broadcasts.RestartServiceWhenStopped"

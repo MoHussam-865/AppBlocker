@@ -4,4 +4,8 @@
     <string name="admin_permission_description">
         Permission is needed to prevent app uninstallation while blocking
     </string>
+    <string name="accessibility_service_description">
+        We Need this permission to disable the uninstallation
+    </string>
+
 </resources>

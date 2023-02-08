@@ -1,19 +1,26 @@
 package com.android_a865.appblocker.utils
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.app.*
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getSystemService
+import com.android_a865.appblocker.BuildConfig
 import com.android_a865.appblocker.R
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.services.MyAccessibilityService
 import kotlinx.coroutines.delay
 import java.util.*
 
@@ -22,6 +29,49 @@ fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
     val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     for (serviceInfo in manager.getRunningServices(Int.MAX_VALUE)) {
         if (serviceClass.name == serviceInfo.service.className) {
+            return true
+        }
+    }
+    return false
+}
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun getLauncherTopApp(context: Context) {
+    /*val endTime = System.currentTimeMillis()
+    val beginTime = endTime - 10000
+
+    val usageStateManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
+            as UsageStatsManager
+
+
+    val event: UsageEvents.Event = UsageEvents.Event()
+    val usageEvents = usageStateManager.queryEvents(beginTime, endTime)
+
+    while (usageEvents.hasNextEvent()) {
+        usageEvents.getNextEvent(event)
+        Log.d("app_running", event.packageName.toString())
+    }*/
+
+}
+
+
+@RequiresApi(33)
+fun isAccessibilitySettingsOn(context: Context, service: Class<*>): Boolean {
+
+    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE)
+            as AccessibilityManager
+
+    val enabledServices = am.getEnabledAccessibilityServiceList(
+        AccessibilityServiceInfo.FEEDBACK_ALL_MASK
+    )
+
+    enabledServices.forEach {
+        val enabledServiceInfo =  it.resolveInfo.serviceInfo
+
+        if (
+            enabledServiceInfo.packageName == context.packageName &&
+                    enabledServiceInfo.name == service.name
+        ) {
             return true
         }
     }
@@ -58,11 +108,12 @@ fun getForegroundApp(context: Context): String {
     var currentApp = ""
     //"usagestats"
     @SuppressLint("WrongConstant")
-    val usm = context.getSystemService("usagestats")
+    val usm = context.getSystemService(Context.USAGE_STATS_SERVICE)
             as UsageStatsManager?
     assert(usm != null)
 
     val time = System.currentTimeMillis()
+
 
     val appList = usm!!.queryUsageStats(
         UsageStatsManager.INTERVAL_DAILY,

@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Process.myUid
 import android.provider.Settings
 import android.util.Log
+import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,7 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
+import com.android_a865.appblocker.services.MyAccessibilityService
 import com.android_a865.appblocker.utils.*
 import kotlinx.coroutines.launch
 
@@ -116,21 +118,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
 
-        try {
-            val name = ComponentName(this, MyDeviceAdminReceiver::class.java)
-            val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-
-            mDPM.setUninstallBlocked(
-                name,
-                packageName,
-                true
-            )
-
-        } catch (e: Exception) {
-
-            Log.d("app_running", e.message.toString())
-        }
-
 
         if (apps.any { it.selected }) {
             // disable checkBoxes
@@ -158,7 +145,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(33)
     private fun requestPermissions() {
         // Usage State permission needed to know the current running app
         val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -171,7 +158,13 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
 
-        /*if (!isAccessibilitySettingsOn(this)) {
+
+
+        /*if (!isAccessibilitySettingsOn(
+                this,
+                MyAccessibilityService::class.java
+            )
+        ) {
             startActivityForResult(
                 Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
                 156

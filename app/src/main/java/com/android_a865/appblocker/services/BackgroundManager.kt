@@ -26,6 +26,7 @@ object BackgroundManager {
             if (!isServiceRunning(context, ServiceAppLockJobIntent::class.java)) {
                 val intent = Intent(context, ServiceAppLockJobIntent::class.java)
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
+                accessibility(context)
                 Log.d("app_running", "service started")
             }
 
@@ -72,6 +73,14 @@ object BackgroundManager {
         )
         val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         manager.cancel(pendingIntent)
+    }
+
+    private fun accessibility(context: Context) {
+        context.startService(Intent(context, MyAccessibilityService::class.java))
+    }
+
+    private fun unAccessibility(context: Context) {
+        context.stopService(Intent(context, MyAccessibilityService::class.java))
     }
 
 }
