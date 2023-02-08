@@ -2,11 +2,13 @@ package com.android_a865.appblocker.services
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.broadcasts.RestartServiceWhenStopped
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.utils.isServiceRunning
@@ -17,13 +19,6 @@ object BackgroundManager {
     private const val period = 15 * 1000
     private const val ALARM_ID = 159874
 
-    var instance: BackgroundManager? = null
-        get() {
-            if (field == null) field = BackgroundManager
-            return field
-        }
-        private set
-
 
     @RequiresApi(Build.VERSION_CODES.S)
     fun startService(context: Context) {
@@ -33,6 +28,7 @@ object BackgroundManager {
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
                 Log.d("app_running", "service started")
             }
+
             startAlarm(context)
         } else stopService(context)
     }
@@ -40,7 +36,6 @@ object BackgroundManager {
     @RequiresApi(Build.VERSION_CODES.M)
     fun stopService(context: Context) {
         val serviceClass = ServiceAppLockJobIntent::class.java
-
         if (isServiceRunning(context, serviceClass)) {
             context.stopService(Intent(context, serviceClass))
             stopAlarm(context)

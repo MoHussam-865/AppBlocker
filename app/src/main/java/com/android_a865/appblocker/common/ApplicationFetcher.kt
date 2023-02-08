@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.utils.getSelected
 import kotlin.collections.ArrayList
 
 
@@ -54,7 +55,7 @@ object AppFetcher {
         return myApps
     }
 
-    fun getApps(context: Context): List<App> {
+    fun getApps(context: Context): ArrayList<App> {
         val apps = ArrayList<App>()
         val packageManager = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN, null)
@@ -74,7 +75,7 @@ object AppFetcher {
 
         }
 
-        return apps
+        return apps.getSelected(context)
     }
 }
 

@@ -56,6 +56,9 @@ object PreferencesManager {
     ) {
 
         val endTime = System.currentTimeMillis() + lastTime * 60000
+
+        if (endTime < getEndTime(context)) return
+
         val allApps = AppFetcher.getAllInstalledApplications(context)
 
         val blockedApps = apps.filter { it.selected }

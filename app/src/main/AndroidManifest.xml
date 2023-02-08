@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.android_a865.appblocker">
 
-
+    <uses-permission android:name="android.permission.RESTART_PACKAGES"/>
+    <uses-permission android:name="android.permission.BROADCAST_PACKAGE_REMOVED"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -74,7 +76,14 @@
         <receiver
             android:name=".broadcasts.ReceiverAppLock"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.QUERY_PACKAGE_RESTART"/>
+                <action android:name="android.intent.action.PACKAGE_RESTARTED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="package"/>
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".broadcasts.RestartServiceWhenStopped"
@@ -86,6 +95,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </receiver>
+
 
     </application>
 

@@ -16,7 +16,7 @@ class RestartServiceWhenStopped: BroadcastReceiver() {
     // is triggered by Alarm
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
-        BackgroundManager.instance?.startService(context)
+        BackgroundManager.startService(context)
 
     }
 }

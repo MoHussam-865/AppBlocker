@@ -1,22 +1,38 @@
 package com.android_a865.appblocker.broadcasts
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
+import android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat.startActivityForResult
+import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.services.BackgroundManager
 import com.android_a865.appblocker.utils.getForegroundApp
+import com.android_a865.appblocker.utils.killCurrentProcess
 import com.android_a865.appblocker.utils.killPackageIfRunning
 
 class ReceiverAppLock : BroadcastReceiver() {
 
+    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null) return
+        handleBlockedApps(context)
+
+        if (intent == null) return
+        handleAppUninstallation(context, intent)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    private fun handleBlockedApps(context: Context) {
         val appRunning = getForegroundApp(context)
         val allowedApps = PreferencesManager.getAllowedApps(context)
         //val lockedApps = PreferencesManager.getLockedApps(context)
@@ -35,4 +51,10 @@ class ReceiverAppLock : BroadcastReceiver() {
 
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    private fun handleAppUninstallation(context: Context, intent: Intent) {
+
+    }
+
 }

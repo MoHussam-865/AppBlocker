@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Process.myUid
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -23,22 +24,20 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.utils.arrange
-import com.android_a865.appblocker.utils.selectApp
-import kotlinx.coroutines.delay
+import com.android_a865.appblocker.utils.*
 import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
     private val installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
-    private val isActive = MutableLiveData(false)
     private var apps
         get() = installedApps.value!!
         set(value) {
             installedApps.value = value
         }
 
+    private val isActive = MutableLiveData(false)
     private val blockedAppsAdapter = BlockedAppsAdapter(this)
 
 
@@ -74,7 +73,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 } catch (e: Exception) {
                     Toast.makeText(this@MainActivity, "Enter Time", Toast.LENGTH_SHORT).show()
                 }
-
             }
 
         }
@@ -97,16 +95,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
     }
 
     private fun getApplications() {
-        val allApps = AppFetcher.getApps(this) as ArrayList<App>
-        val packages = PreferencesManager.getLockedApps(this)
-
-        allApps.forEach {
-            if (packages.contains(it.packageName)) {
-                it.selected = true
-            }
-        }
-        apps = allApps.arrange()
-        //refresh()
+        apps = AppFetcher.getApps(this).arrange()
     }
 
     override fun onItemClicked(app: App, isChecked: Boolean) {
@@ -118,18 +107,39 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         // time is in minute, the day has (24*60) minute
         if (time > (24 * 60)) {
-            Toast.makeText(
+            createMessage(
                 this,
-                "Can't block for more than 24 hours",
-                Toast.LENGTH_LONG
-            ).show()
+                "Sorry",
+                "can't block for more than 24 hours"
+            )
             return
         }
+
+
+        try {
+            val name = ComponentName(this, MyDeviceAdminReceiver::class.java)
+            val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+
+            mDPM.setUninstallBlocked(
+                name,
+                packageName,
+                true
+            )
+
+        } catch (e: Exception) {
+
+            Log.d("app_running", e.message.toString())
+        }
+
 
         if (apps.any { it.selected }) {
             // disable checkBoxes
             isActive.value = true
-            Toast.makeText(this, "Blocking Started", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Blocking started",
+                Toast.LENGTH_LONG
+            ).show()
             lifecycleScope.launch {
                 // saves the data to start blocking
                 PreferencesManager.setupLockSettings(
@@ -137,13 +147,13 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                     apps,
                     time
                 )
+                // start the blocking service
+                BackgroundManager.startService(this@MainActivity)
                 // enable the checkBoxes when service ends
                 observeList()
-                // start the blocking service
-                BackgroundManager.instance?.startService(this@MainActivity)
             }
         } else {
-            Toast.makeText(this, "No apps selected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No apps selected", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -180,6 +190,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         // admin permission
         val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
+
         if (!mDPM.isAdminActive(adminName)) {
             val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
@@ -190,11 +201,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
     private fun observeList() {
         lifecycleScope.launch {
-            val endTime = PreferencesManager.getEndTime(this@MainActivity)
-            while (endTime > System.currentTimeMillis()) {
-                delay(3000)
-            }
-            isActive.value = false
+            isActive.value = !isDone(this@MainActivity)
         }
     }
 
