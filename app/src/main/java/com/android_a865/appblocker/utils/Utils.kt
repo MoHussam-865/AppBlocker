@@ -112,49 +112,33 @@ fun createNotificationChannel(context: Context): Notification {
 }
 
 //-----------------------ACCESSIBILITY--------------------------------
+
 private fun isAccessibilityPermissionOn(
     context: Context,
     serviceClass: Class<MyAccessibilityService>
 ): Boolean {
-    var accessibilityEnabled = 0
     //your package /   accessibility service path/class
-    val service = "${context.packageName}/${serviceClass.canonicalName}";
+    //val service = "${context.packageName}/${serviceClass.canonicalName}"
+    val service = "${context.packageName}/${serviceClass.canonicalName}"
 
-    val accessibilityFound = false
-    try {
-        accessibilityEnabled = Settings.Secure.getInt(
+    val settingValue = Settings.Secure
+        .getString(
             context.applicationContext.contentResolver,
-            android.provider.Settings.Secure.ACCESSIBILITY_ENABLED);
-        Log.v(TAG, "accessibilityEnabled = $accessibilityEnabled");
-    } catch (e: Settings.SettingNotFoundException) {
-        Log.e(TAG, "Error finding setting, default accessibility to not found: "
-                + e.message);
-    }
-    val mStringColonSplitter = TextUtils.SimpleStringSplitter(':');
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
 
-    if (accessibilityEnabled == 1) {
-        Log.v(TAG, "***ACCESSIBILIY IS ENABLED*** -----------------");
-        val settingValue = Settings.Secure.getString(
-            context.applicationContext.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-        if (settingValue != null) {
-            mStringColonSplitter.setString(settingValue)
-            while (mStringColonSplitter.hasNext()) {
-                val accessibilityService = mStringColonSplitter.next();
+    Log.v(TAG, "settings: $settingValue")
 
-                Log.v(TAG, "-------------- > accessibilityService :: $accessibilityService");
-                if (accessibilityService.equals(service, ignoreCase = true)) {
-                    Log.v(TAG, "We've found the correct setting - accessibility is switched on!");
-                    return true;
-                }
-            }
+    settingValue?.let {
+        val services = it.split(":")
+        if (services.containsIgnoreCase(service)) {
+            return true
         }
-    } else {
-        Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
     }
 
-    return accessibilityFound;
+    return false
 }
+
 
 fun isAccessibilitySettingsOn(context: Context): Boolean {
     return isAccessibilityPermissionOn(

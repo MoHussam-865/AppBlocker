@@ -36,3 +36,12 @@ fun ArrayList<App>.getSelected(
     }
     return this
 }
+
+fun List<String>.containsIgnoreCase(str: String): Boolean {
+    forEach {
+        if (it.equals(str, ignoreCase = true)){
+            return true
+        }
+    }
+    return false
+}

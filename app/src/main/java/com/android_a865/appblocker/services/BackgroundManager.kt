@@ -28,7 +28,7 @@ object BackgroundManager {
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
                 Log.d("app_running", "service started")
             }
-
+            accessibility(context)
             startAlarm(context)
         } else stopService(context)
     }
@@ -41,6 +41,7 @@ object BackgroundManager {
             stopAlarm(context)
             Log.d("app_running", "service stopped")
         }
+        unAccessibility(context)
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -75,11 +76,25 @@ object BackgroundManager {
     }
 
     private fun accessibility(context: Context) {
-        context.startService(Intent(context, MyAccessibilityService::class.java))
+        if (
+            !isServiceRunning(
+                context,
+                MyAccessibilityService::class.java
+            )
+        ) {
+            context.startService(Intent(context, MyAccessibilityService::class.java))
+        }
     }
 
     private fun unAccessibility(context: Context) {
-        context.stopService(Intent(context, MyAccessibilityService::class.java))
+        if (
+            isServiceRunning(
+                context,
+                MyAccessibilityService::class.java
+            )
+        ) {
+            context.stopService(Intent(context, MyAccessibilityService::class.java))
+        }
     }
 
 }

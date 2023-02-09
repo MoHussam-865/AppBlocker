@@ -18,7 +18,7 @@ fun createMessage(
         }.show()
 }
 
-
+// does not work properly
 fun accessibilityRequestMessage(context: Context) {
     AlertDialog.Builder(context)
         .setTitle(context.getString(R.string.app_name))
@@ -31,6 +31,7 @@ fun accessibilityRequestMessage(context: Context) {
         }.show()
 }
 
+// does not work properly
 fun loadingWindow(context: Context): AlertDialog {
     return AlertDialog.Builder(context)
         .setTitle(context.getString(R.string.app_name))

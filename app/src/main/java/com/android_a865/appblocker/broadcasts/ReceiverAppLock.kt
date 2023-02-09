@@ -53,7 +53,7 @@ class ReceiverAppLock : BroadcastReceiver() {
     private fun handleUninstallationBlocking(context: Context) {
         val appRunning = getForegroundApp(context)
         val isRunning = isServiceRunning(context, MyAccessibilityService::class.java)
-
+        Log.d(TAG, "access running: $isRunning")
         // if it's not running it can be :-
         // because the permission is not enabled then block settings
         // it can just needs to be run
@@ -81,6 +81,7 @@ class ReceiverAppLock : BroadcastReceiver() {
 
         }
 
+        // if it's running it will handle the uninstallation protection
 
     }
 

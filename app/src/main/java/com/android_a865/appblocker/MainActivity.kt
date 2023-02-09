@@ -1,7 +1,10 @@
 package com.android_a865.appblocker
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.AppOpsManager
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -14,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.AppFetcher
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
@@ -25,6 +29,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
+    private lateinit var dialog: AlertDialog.Builder
     private val installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
     private var apps
         get() = installedApps.value!!
@@ -120,7 +125,9 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
         if (apps.any { it.selected }) {
             val dialog = loadingWindow(this)
+            dialog.show()
             Thread.sleep(1000)
+
             // disable checkBoxes
             isActive.value = true
             /*Toast.makeText(
@@ -161,9 +168,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
 
-
-        //getAccessibilityPermission(this)
-
         // display over other apps
         /*if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
@@ -174,14 +178,15 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }*/
 
         // admin permission
-        /*val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
-
         if (!mDPM.isAdminActive(adminName)) {
             val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
             startActivityForResult(intent, 0)
-        }*/
+        }
+
+        getAccessibilityPermission(this)
 
     }
 
