@@ -2,11 +2,8 @@ package com.android_a865.appblocker
 
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Process.myUid
@@ -17,13 +14,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.AppFetcher
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
-import com.android_a865.appblocker.services.MyAccessibilityService
 import com.android_a865.appblocker.utils.*
 import kotlinx.coroutines.launch
 
@@ -67,11 +62,19 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
             start.setOnClickListener {
                 try {
-                    block(
-                        blockTime.editText?.text.toString().toInt()
-                    )
+                    if (isAccessibilitySettingsOn(this@MainActivity)) {
+                        block(
+                            blockTime.editText?.text.toString().toInt()
+                        )
+                    } else {
+                        getAccessibilityPermission(this@MainActivity)
+                    }
                 } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Enter Time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Enter Time",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -115,16 +118,16 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             return
         }
 
-
-
         if (apps.any { it.selected }) {
+            val dialog = loadingWindow(this)
+            Thread.sleep(1000)
             // disable checkBoxes
             isActive.value = true
-            Toast.makeText(
+            /*Toast.makeText(
                 this,
                 "Blocking started",
                 Toast.LENGTH_LONG
-            ).show()
+            ).show()*/
             lifecycleScope.launch {
                 // saves the data to start blocking
                 PreferencesManager.setupLockSettings(
@@ -136,6 +139,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 BackgroundManager.startService(this@MainActivity)
                 // enable the checkBoxes when service ends
                 observeList()
+                dialog.dismiss()
             }
         } else {
             Toast.makeText(this, "No apps selected", Toast.LENGTH_LONG).show()
@@ -158,35 +162,26 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
 
 
-        if (!isAccessibilitySettingsOn(
-                this,
-                MyAccessibilityService::class.java
-            )
-        ) {
-            startActivityForResult(
-                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
-                156
-            )
-        }
+        //getAccessibilityPermission(this)
 
         // display over other apps
-        if (!Settings.canDrawOverlays(this)) {
+        /*if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
             )
             startActivityForResult(intent, 0)
-        }
+        }*/
 
         // admin permission
-        val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        /*val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
 
         if (!mDPM.isAdminActive(adminName)) {
             val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
             startActivityForResult(intent, 0)
-        }
+        }*/
 
     }
 

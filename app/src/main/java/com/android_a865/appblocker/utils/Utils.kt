@@ -27,6 +27,8 @@ import java.util.*
 
 private const val TAG = "app_running"
 
+
+//--------------------APPS BLOCKING---------------------------------
 fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
     val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     for (serviceInfo in manager.getRunningServices(Int.MAX_VALUE)) {
@@ -37,29 +39,14 @@ fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
     return false
 }
 
-fun createNotificationChannel(context: Context): Notification {
-    var channelId = ""
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        channelId = "my_service"
-        val channelName = "My Background Service"
-        val channel = NotificationChannel(
-            channelId,
-            channelName,
-            NotificationManager.IMPORTANCE_NONE
-        )
-        channel.lightColor = Color.BLUE
-        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-        val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        service.createNotificationChannel(channel)
-    }
-
-    return NotificationCompat.Builder(context, channelId)
-        .setOngoing(true)
-        .setSmallIcon(R.drawable.ic_block)
-        .setContentTitle("App Blocker")
-        .setContentText("Service is running")
-        .setCategory(Notification.CATEGORY_SERVICE)
-        .build()
+fun killPackageIfRunning(context: Context, packageName: String) {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val startMain = Intent(Intent.ACTION_MAIN)
+    startMain.addCategory(Intent.CATEGORY_HOME)
+    startMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(startMain)
+    activityManager.killBackgroundProcesses(packageName)
+    Log.d(TAG, packageName)
 }
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -99,25 +86,33 @@ fun getForegroundApp(context: Context): String {
     return currentApp
 }
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
-fun getForegroundAppName(context: Context): String {
-    try {
-
-        context.packageManager.apply {
-            return getApplicationLabel(
-                getApplicationInfo(
-                    getForegroundApp(context), 0
-                )
-            ).toString()
-
-        }
-
-    } catch (e: Exception) {
-        return ""
+fun createNotificationChannel(context: Context): Notification {
+    var channelId = ""
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        channelId = "my_service"
+        val channelName = "My Background Service"
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_NONE
+        )
+        channel.lightColor = Color.BLUE
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(channel)
     }
+
+    return NotificationCompat.Builder(context, channelId)
+        .setOngoing(true)
+        .setSmallIcon(R.drawable.ic_block)
+        .setContentTitle("App Blocker")
+        .setContentText("Service is running")
+        .setCategory(Notification.CATEGORY_SERVICE)
+        .build()
 }
 
-fun isAccessibilitySettingsOn(
+//-----------------------ACCESSIBILITY--------------------------------
+private fun isAccessibilityPermissionOn(
     context: Context,
     serviceClass: Class<MyAccessibilityService>
 ): Boolean {
@@ -161,25 +156,22 @@ fun isAccessibilitySettingsOn(
     return accessibilityFound;
 }
 
-fun killPackageIfRunning(context: Context, packageName: String) {
-    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val startMain = Intent(Intent.ACTION_MAIN)
-    startMain.addCategory(Intent.CATEGORY_HOME)
-    startMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-    context.startActivity(startMain)
-    activityManager.killBackgroundProcesses(packageName)
-}
-
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
-fun killCurrentProcess(context: Context) {
-    killPackageIfRunning(
+fun isAccessibilitySettingsOn(context: Context): Boolean {
+    return isAccessibilityPermissionOn(
         context,
-        getForegroundApp(
-            context
-        )
+        MyAccessibilityService::class.java
     )
 }
 
+fun getAccessibilityPermission(context: Context) {
+    if (!isAccessibilitySettingsOn(context)) {
+        context.startActivity(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        )
+    }
+}
+
+//---------------------------------------------------
 suspend fun isDone(context: Context): Boolean {
     val endTime = PreferencesManager.getEndTime(context)
     while (endTime > System.currentTimeMillis()) {
@@ -188,55 +180,40 @@ suspend fun isDone(context: Context): Boolean {
     return true
 }
 
-fun createMessage(context: Context, title: String, msg: String) {
-    AlertDialog.Builder(context)
-        .setTitle(title)
-        .setMessage(msg)
-        .setPositiveButton("OK") { dialog, _ ->
-            dialog.dismiss()
-        }.show()
-}
 
-
-//----------------------------------------------------------------
-fun ArrayList<App>.arrange(): ArrayList<App> {
-    val sortedArray = ArrayList<App>()
-    sortedArray.addAll(filter { it.selected })
-    sortedArray.addAll(filter { !it.selected }.sortedBy { it.name })
-    return sortedArray
-}
-
-fun ArrayList<App>.selectApp(
-    app: App,
-    isChecked: Boolean
-): ArrayList<App> {
-    forEachIndexed { index, application ->
-        if (application.packageName == app.packageName) {
-            set(index, application.copy(selected = isChecked))
-        }
-    }
-    return arrange()
-}
-
-
-fun ArrayList<App>.getSelected(
-    context: Context
-): ArrayList<App> {
-    val packages = PreferencesManager.getLockedApps(context)
-    forEach {
-        if (packages.contains(it.packageName)) {
-            it.selected = true
-        }
-    }
-    return this
-}
+//--------------------UNUSED--------------------------------------------
 
 
 /*
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun killCurrentProcess(context: Context) {
+    val appRunning = getForegroundApp(context)
+    killPackageIfRunning(context,appRunning)
+}
+
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+fun getForegroundAppName(context: Context): String {
+    try {
+
+        context.packageManager.apply {
+            return getApplicationLabel(
+                getApplicationInfo(
+                    getForegroundApp(context), 0
+                )
+            ).toString()
+
+        }
+
+    } catch (e: Exception) {
+        return ""
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun getLauncherTopApp(context: Context) {
-    /*val endTime = System.currentTimeMillis()
+    val endTime = System.currentTimeMillis()
     val beginTime = endTime - 10000
 
     val usageStateManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
@@ -249,7 +226,7 @@ fun getLauncherTopApp(context: Context) {
     while (usageEvents.hasNextEvent()) {
         usageEvents.getNextEvent(event)
         Log.d(TAG, event.packageName.toString())
-    }*/
+    }
 
 }
 
@@ -282,10 +259,5 @@ fun isAccessibilitySettingsOn(context: Context): Boolean {
     return false
 }
 
-class Utils(private val context: Context) {
-
-
-
-}
 */
 

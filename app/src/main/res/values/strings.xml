@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">AppBlocker</string>
+
+    <string name="accessibility_message">
+        We need Accessibility permission to be turned on to
+        let you open settings
+    </string>
+
     <string name="block_time_in_minutes">Block time in minutes</string>
     <string name="admin_permission_description">
         Permission is needed to prevent app uninstallation while blocking
