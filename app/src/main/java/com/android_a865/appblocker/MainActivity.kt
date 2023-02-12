@@ -1,35 +1,26 @@
 package com.android_a865.appblocker
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.app.AppOpsManager
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Process.myUid
-import android.provider.Settings
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.AppFetcher
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.databinding.ActivityMainBinding
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.BackgroundManager
 import com.android_a865.appblocker.utils.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener {
 
-    private lateinit var dialog: AlertDialog.Builder
     private val installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
     private var apps
         get() = installedApps.value!!
@@ -48,7 +39,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        requestPermissions()
         getApplications()
 
         binding.apply {
@@ -67,12 +57,18 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
 
             start.setOnClickListener {
                 try {
-                    if (isAccessibilitySettingsOn(this@MainActivity)) {
+                    if (isPermissionsGranted(this@MainActivity)) {
                         block(
                             blockTime.editText?.text.toString().toInt()
                         )
                     } else {
-                        getAccessibilityPermission(this@MainActivity)
+                        requestBox(
+                            this@MainActivity,
+                            "App Blocker",
+                            "We need some permissions to work properly"
+                        ) {
+                            requestPermissions(this@MainActivity)
+                        }
                     }
                 } catch (e: Exception) {
                     Toast.makeText(
@@ -82,7 +78,6 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                     ).show()
                 }
             }
-
         }
 
         installedApps.observe(this) { list ->
@@ -100,6 +95,7 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         isActive.value = PreferencesManager.isActive(this)
+        observeList()
     }
 
     private fun getApplications() {
@@ -124,19 +120,11 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         if (apps.any { it.selected }) {
-            val dialog = loadingWindow(this)
-            dialog.show()
-            Thread.sleep(1000)
 
-            // disable checkBoxes
+            // disable checkboxes
             isActive.value = true
-            /*Toast.makeText(
-                this,
-                "Blocking started",
-                Toast.LENGTH_LONG
-            ).show()*/
+            // saves the data to start blocking
             lifecycleScope.launch {
-                // saves the data to start blocking
                 PreferencesManager.setupLockSettings(
                     this@MainActivity,
                     apps,
@@ -144,55 +132,32 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 )
                 // start the blocking service
                 BackgroundManager.startService(this@MainActivity)
-                // enable the checkBoxes when service ends
-                observeList()
-                dialog.dismiss()
             }
+            Toast.makeText(
+                this,
+                "Blocking started",
+                Toast.LENGTH_LONG
+            ).show()
         } else {
             Toast.makeText(this, "No apps selected", Toast.LENGTH_LONG).show()
         }
     }
 
 
-    @RequiresApi(33)
-    private fun requestPermissions() {
-        // Usage State permission needed to know the current running app
-        val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOpsManager.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            myUid(),
-            packageName
-        )
-        if (mode != AppOpsManager.MODE_ALLOWED) {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        }
-
-
-        // display over other apps
-        /*if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            startActivityForResult(intent, 0)
-        }*/
-
-        // admin permission
-        val mDPM = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        val adminName = ComponentName(this, MyDeviceAdminReceiver::class.java)
-        if (!mDPM.isAdminActive(adminName)) {
-            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminName)
-            startActivityForResult(intent, 0)
-        }
-
-        getAccessibilityPermission(this)
-
-    }
-
     private fun observeList() {
+        // enable the checkBoxes when service ends
         lifecycleScope.launch {
-            isActive.value = !isDone(this@MainActivity)
+
+            var lastValue = false
+            var dataValue: Boolean
+            while (true) {
+                dataValue = PreferencesManager.isActive(this@MainActivity)
+                if (lastValue != dataValue) {
+                    isActive.value = dataValue
+                    lastValue = dataValue
+                }
+                delay(3000)
+            }
         }
     }
 

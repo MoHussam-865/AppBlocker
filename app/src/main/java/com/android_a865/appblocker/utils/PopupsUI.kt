@@ -32,11 +32,26 @@ fun accessibilityRequestMessage(context: Context) {
 }
 
 // does not work properly
-fun loadingWindow(context: Context): AlertDialog {
-    return AlertDialog.Builder(context)
-        .setTitle(context.getString(R.string.app_name))
-        .setMessage("Loading ...")
+fun loadingWindow(context: Context): AlertDialog.Builder {
+    val dialog =  AlertDialog.Builder(context)
         .setCancelable(false)
-        .show()
+        .setTitle("Loading....")
+        .setMessage("please wait")
+
+    return dialog
+}
+
+fun requestBox(
+    context: Context,
+    title: String,
+    msg: String,
+    func: ()->Unit
+) {
+    AlertDialog.Builder(context)
+        .setTitle(title)
+        .setMessage(msg)
+        .setPositiveButton("OK") { _, _ ->
+            func()
+        }.show()
 }
 

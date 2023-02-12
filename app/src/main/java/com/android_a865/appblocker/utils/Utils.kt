@@ -3,13 +3,16 @@ package com.android_a865.appblocker.utils
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.app.*
+import android.app.admin.DevicePolicyManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.os.Process
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
@@ -19,6 +22,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
 import com.android_a865.appblocker.BuildConfig
 import com.android_a865.appblocker.R
+import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.models.App
 import com.android_a865.appblocker.services.MyAccessibilityService
@@ -109,59 +113,6 @@ fun createNotificationChannel(context: Context): Notification {
         .setContentText("Service is running")
         .setCategory(Notification.CATEGORY_SERVICE)
         .build()
-}
-
-//-----------------------ACCESSIBILITY--------------------------------
-
-private fun isAccessibilityPermissionOn(
-    context: Context,
-    serviceClass: Class<MyAccessibilityService>
-): Boolean {
-    //your package /   accessibility service path/class
-    //val service = "${context.packageName}/${serviceClass.canonicalName}"
-    val service = "${context.packageName}/${serviceClass.canonicalName}"
-
-    val settingValue = Settings.Secure
-        .getString(
-            context.applicationContext.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )
-
-    Log.v(TAG, "settings: $settingValue")
-
-    settingValue?.let {
-        val services = it.split(":")
-        if (services.containsIgnoreCase(service)) {
-            return true
-        }
-    }
-
-    return false
-}
-
-
-fun isAccessibilitySettingsOn(context: Context): Boolean {
-    return isAccessibilityPermissionOn(
-        context,
-        MyAccessibilityService::class.java
-    )
-}
-
-fun getAccessibilityPermission(context: Context) {
-    if (!isAccessibilitySettingsOn(context)) {
-        context.startActivity(
-            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        )
-    }
-}
-
-//---------------------------------------------------
-suspend fun isDone(context: Context): Boolean {
-    val endTime = PreferencesManager.getEndTime(context)
-    while (endTime > System.currentTimeMillis()) {
-        delay(3000)
-    }
-    return true
 }
 
 
