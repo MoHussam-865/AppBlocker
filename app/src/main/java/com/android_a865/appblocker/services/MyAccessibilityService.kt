@@ -48,14 +48,12 @@ class MyAccessibilityService : AccessibilityService() {
             when (myEvent.eventType) {
                 AccessibilityEvent.TYPE_VIEW_LONG_CLICKED -> {
                     Log.d(TAG, "TYPE_VIEW_LONG_CLICKED")
-                    Log.d(TAG, "${myEvent.text}")
-                    Log.d(TAG, "${myEvent.contentDescription}")
+                    Log.d(TAG, "${myEvent.text}${myEvent.contentDescription}")
                     checkEvent(myEvent)
                 }
                 AccessibilityEvent.TYPE_VIEW_CLICKED -> {
                     Log.d(TAG, "TYPE_VIEW_CLICKED")
-                    Log.d(TAG, "${myEvent.text}")
-                    Log.d(TAG, "${myEvent.contentDescription}")
+                    Log.d(TAG, "${myEvent.text}${myEvent.contentDescription}")
                     checkEvent(myEvent)
                 }
                 else -> {

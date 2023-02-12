@@ -1,6 +1,7 @@
 package com.android_a865.appblocker
 
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -120,11 +121,15 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         if (apps.any { it.selected }) {
+            val dialog = loading()
+            dialog.show()
 
-            // disable checkboxes
-            isActive.value = true
-            // saves the data to start blocking
             lifecycleScope.launch {
+                delay(1000)
+                // disable checkboxes
+                isActive.value = true
+
+                // saves the data to start blocking
                 PreferencesManager.setupLockSettings(
                     this@MainActivity,
                     apps,
@@ -132,12 +137,13 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 )
                 // start the blocking service
                 BackgroundManager.startService(this@MainActivity)
+                dialog.dismiss()
+                Toast.makeText(
+                    this@MainActivity,
+                    "Blocking started",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-            Toast.makeText(
-                this,
-                "Blocking started",
-                Toast.LENGTH_LONG
-            ).show()
         } else {
             Toast.makeText(this, "No apps selected", Toast.LENGTH_LONG).show()
         }
@@ -161,4 +167,10 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
     }
 
+    private fun loading(): ProgressDialog {
+        val dialog = ProgressDialog(this)
+        dialog.setTitle("Loading....")
+        dialog.setCancelable(false)
+        return dialog
+    }
 }
