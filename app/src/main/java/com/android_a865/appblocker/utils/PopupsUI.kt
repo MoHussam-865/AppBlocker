@@ -1,8 +1,17 @@
 package com.android_a865.appblocker.utils
 
 import android.app.AlertDialog
+import android.app.ProgressDialog
 import android.content.Context
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.android_a865.appblocker.R
+import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.services.BackgroundManager
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 fun createMessage(
@@ -32,20 +41,23 @@ fun accessibilityRequestMessage(context: Context) {
 }
 
 // does not work properly
-fun loadingWindow(context: Context): AlertDialog.Builder {
-    val dialog =  AlertDialog.Builder(context)
-        .setCancelable(false)
-        .setTitle("Loading....")
-        .setMessage("please wait")
+@OptIn(DelicateCoroutinesApi::class)
+suspend fun loadingProgress(context: Context, func: () -> Unit) {
+    val dialog = ProgressDialog(context)
+    dialog.setTitle("Loading....")
+    dialog.setCancelable(false)
+    dialog.show()
+    delay(1000)
+    func()
+    dialog.dismiss()
 
-    return dialog
 }
 
 fun requestBox(
     context: Context,
     title: String,
     msg: String,
-    func: ()->Unit
+    func: () -> Unit
 ) {
     AlertDialog.Builder(context)
         .setTitle(title)

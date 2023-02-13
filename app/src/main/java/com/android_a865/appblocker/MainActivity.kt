@@ -121,28 +121,27 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
         }
 
         if (apps.any { it.selected }) {
-            val dialog = loading()
-            dialog.show()
 
             lifecycleScope.launch {
-                delay(1000)
-                // disable checkboxes
-                isActive.value = true
+                loadingProgress(this@MainActivity) {
 
-                // saves the data to start blocking
-                PreferencesManager.setupLockSettings(
-                    this@MainActivity,
-                    apps,
-                    time
-                )
-                // start the blocking service
-                BackgroundManager.startService(this@MainActivity)
-                dialog.dismiss()
-                Toast.makeText(
-                    this@MainActivity,
-                    "Blocking started",
-                    Toast.LENGTH_LONG
-                ).show()
+                    // disable checkboxes
+                    isActive.value = true
+
+                    // saves the data to start blocking
+                    PreferencesManager.setupLockSettings(
+                        this@MainActivity,
+                        apps,
+                        time
+                    )
+                    // start the blocking service
+                    BackgroundManager.startService(this@MainActivity)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Blocking started",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         } else {
             Toast.makeText(this, "No apps selected", Toast.LENGTH_LONG).show()
@@ -165,12 +164,5 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
                 delay(3000)
             }
         }
-    }
-
-    private fun loading(): ProgressDialog {
-        val dialog = ProgressDialog(this)
-        dialog.setTitle("Loading....")
-        dialog.setCancelable(false)
-        return dialog
     }
 }

@@ -2,16 +2,12 @@ package com.android_a865.appblocker.services
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.R
-import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.utils.createMessage
 import com.android_a865.appblocker.utils.isServiceRunning
 import com.android_a865.appblocker.utils.killPackageIfRunning
 
