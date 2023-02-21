@@ -12,7 +12,6 @@ import com.android_a865.appblocker.models.App
 class BlockedAppsAdapter(
     private val listener: OnItemEventListener,
 ) : ListAdapter<App, BlockedAppsAdapter.ViewHolder>(InvoiceDiffCallback()) {
-    var isActive = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -45,7 +44,8 @@ class BlockedAppsAdapter(
                 image.setImageDrawable(app.icon)
                 appName.text = app.name
                 isBlocked.isChecked = app.selected
-                isBlocked.isEnabled = !(app.selected && isActive)
+                isBlocked.isEnabled = !app.isActive
+
             }
         }
     }

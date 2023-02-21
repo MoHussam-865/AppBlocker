@@ -127,7 +127,6 @@ fun killCurrentProcess(context: Context) {
     killPackageIfRunning(context,appRunning)
 }
 
-
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun getForegroundAppName(context: Context): String {
     try {
@@ -195,4 +194,5 @@ fun isAccessibilitySettingsOn(context: Context): Boolean {
 }
 
 */
+
 

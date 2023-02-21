@@ -90,12 +90,24 @@ class MainActivity : AppCompatActivity(), BlockedAppsAdapter.OnItemEventListener
             )
         }
 
+
+        isActive.value = PreferencesManager.isActive(this)
+
+        if (isActive.value!! && !isPermissionsGranted(this@MainActivity)) {
+            requestBox(
+                this@MainActivity,
+                "App Blocker",
+                "We need some permissions to work properly"
+            ) {
+                requestPermissions(this@MainActivity)
+            }
+        }
+
         isActive.observe(this) {
-            blockedAppsAdapter.isActive = it
+            apps = apps.getSelected(this).arrange()
             blockedAppsAdapter.notifyDataSetChanged()
         }
 
-        isActive.value = PreferencesManager.isActive(this)
         observeList()
     }
 

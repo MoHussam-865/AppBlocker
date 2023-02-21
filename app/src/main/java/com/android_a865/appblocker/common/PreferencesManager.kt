@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 
 object PreferencesManager {
     private const val LOCKED_APPS = "locked_apps"
+    private const val ACTIVE_LOCKED_APPS = "active_locked_apps"
     private const val ALLOWED_APPS = "allowed_apps"
     private const val END_TIME = "end_time"
     private const val LAST_TIME = "last_time"
@@ -18,6 +19,12 @@ object PreferencesManager {
     fun getLockedApps(context: Context): List<String> {
         return PreferenceManager.getDefaultSharedPreferences(context)
             .getString(LOCKED_APPS, "")?.split("/")
+            ?.filter { it != "" } ?: emptyList()
+    }
+
+    fun getActiveLockedApps(context: Context): List<String> {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+            .getString(ACTIVE_LOCKED_APPS, "")?.split("/")
             ?.filter { it != "" } ?: emptyList()
     }
 
@@ -72,6 +79,7 @@ object PreferencesManager {
         PreferenceManager.getDefaultSharedPreferences(context)
             .edit()
             .putString(LOCKED_APPS, blockedApps)
+            .putString(ACTIVE_LOCKED_APPS, blockedApps)
             .putString(ALLOWED_APPS, allowedApps)
             .putLong(END_TIME, endTime)
             .putInt(LAST_TIME, lastTime)

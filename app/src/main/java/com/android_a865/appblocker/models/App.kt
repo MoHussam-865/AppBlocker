@@ -8,4 +8,5 @@ data class App(
     val name: String?,
     val packageName: String,
     var selected: Boolean = false,
+    var isActive: Boolean = false,
 )

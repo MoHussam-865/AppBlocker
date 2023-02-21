@@ -28,10 +28,16 @@ fun ArrayList<App>.selectApp(
 fun ArrayList<App>.getSelected(
     context: Context
 ): ArrayList<App> {
-    val packages = PreferencesManager.getLockedApps(context)
+    val lockedApps = PreferencesManager.getLockedApps(context)
+    val activeLockedApps = PreferencesManager.getActiveLockedApps(context)
+
     forEach {
-        if (packages.contains(it.packageName)) {
+        if (lockedApps.contains(it.packageName)) {
             it.selected = true
+        }
+
+        if (activeLockedApps.contains(it.packageName)) {
+            it.isActive = true
         }
     }
     return this
