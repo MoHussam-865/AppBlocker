@@ -36,13 +36,8 @@ fun ArrayList<App>.getSelected(
     val activeLockedApps = PreferencesManager.getActiveLockedApps(context)
 
     forEach {
-        if (lockedApps.contains(it.packageName)) {
-            it.selected = true
-        }
-
-        if (activeLockedApps.contains(it.packageName)) {
-            it.isActive = true
-        }
+        it.selected = lockedApps.contains(it.packageName)
+        it.isActive = activeLockedApps.contains(it.packageName)
     }
     return this
 }
