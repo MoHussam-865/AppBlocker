@@ -28,7 +28,11 @@ fun ArrayList<App>.selectApp(
 fun ArrayList<App>.getSelected(
     context: Context
 ): ArrayList<App> {
+    val endTime = PreferencesManager.getEndTime(context)
     val lockedApps = PreferencesManager.getLockedApps(context)
+    if (endTime < System.currentTimeMillis()) {
+        PreferencesManager.clearActiveLockedApps(context)
+    }
     val activeLockedApps = PreferencesManager.getActiveLockedApps(context)
 
     forEach {

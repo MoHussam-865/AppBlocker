@@ -56,6 +56,13 @@ object PreferencesManager {
             .apply()
     }
 
+    fun clearActiveLockedApps(context: Context) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+            .edit()
+            .putString(ACTIVE_LOCKED_APPS, "")
+            .apply()
+    }
+
     fun setupLockSettings(
         context: Context,
         apps: List<App>,
