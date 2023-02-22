@@ -1,32 +1,17 @@
 package com.android_a865.appblocker.utils
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.app.*
-import android.app.admin.DevicePolicyManager
-import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.os.Process
-import android.provider.Settings
-import android.text.TextUtils
 import android.util.Log
-import android.view.accessibility.AccessibilityManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.getSystemService
-import com.android_a865.appblocker.BuildConfig
 import com.android_a865.appblocker.R
-import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.models.App
-import com.android_a865.appblocker.services.MyAccessibilityService
-import kotlinx.coroutines.delay
 import java.util.*
 
 private const val TAG = "app_running"
