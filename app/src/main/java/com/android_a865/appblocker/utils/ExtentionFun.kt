@@ -2,8 +2,10 @@ package com.android_a865.appblocker.utils
 
 import android.content.Context
 import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.feature_choose_apps.domain.App
 import java.util.ArrayList
+
+val <T> T.exhaustive: T get() = this
 
 fun ArrayList<App>.arrange(): ArrayList<App> {
     val sortedArray = ArrayList<App>()

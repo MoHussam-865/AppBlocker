@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
 import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.services.MyAccessibilityService
+import com.android_a865.appblocker.common.services.MyAccessibilityService
 
 
 private const val TAG = "app_running"

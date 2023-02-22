@@ -1,4 +1,4 @@
-package com.android_a865.appblocker
+package com.android_a865.appblocker.common.adapters
 
 
 import android.view.LayoutInflater
@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.android_a865.appblocker.databinding.AdapterBlockedAppsBinding
-import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.feature_choose_apps.domain.App
 
 class BlockedAppsAdapter(
     private val listener: OnItemEventListener,

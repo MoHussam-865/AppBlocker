@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.android_a865.appblocker.R
 import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.services.BackgroundManager
+import com.android_a865.appblocker.common.services.BackgroundManager
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay

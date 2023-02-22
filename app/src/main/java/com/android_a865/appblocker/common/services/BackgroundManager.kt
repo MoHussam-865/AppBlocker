@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.services
+package com.android_a865.appblocker.common.services
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -9,7 +9,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.broadcasts.RestartServiceWhenStopped
+import com.android_a865.appblocker.common.broadcasts.RestartServiceWhenStopped
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.utils.isServiceRunning
 

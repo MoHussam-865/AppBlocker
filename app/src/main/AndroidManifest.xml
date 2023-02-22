@@ -28,7 +28,7 @@
 
     <application
         android:allowBackup="true"
-        android:name=".common.MyApp"
+        android:name=".di.MyApp"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -58,7 +58,7 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".services.MyAccessibilityService"
+        <service android:name=".common.services.MyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -71,19 +71,19 @@
 
 
         <service
-            android:name=".services.ServiceAppLockJobIntent"
+            android:name=".common.services.ServiceAppLockJobIntent"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
 
 
         <receiver
-            android:name=".broadcasts.ReceiverAppLock"
+            android:name=".common.broadcasts.ReceiverAppLock"
             android:enabled="true"
             android:exported="true"/>
 
         <receiver
-            android:name=".broadcasts.RestartServiceWhenStopped"
+            android:name=".common.broadcasts.RestartServiceWhenStopped"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

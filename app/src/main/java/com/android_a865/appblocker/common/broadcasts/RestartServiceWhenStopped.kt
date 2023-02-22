@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.broadcasts
+package com.android_a865.appblocker.common.broadcasts
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.android_a865.appblocker.services.BackgroundManager
+import com.android_a865.appblocker.common.services.BackgroundManager
 
 class RestartServiceWhenStopped: BroadcastReceiver() {
 

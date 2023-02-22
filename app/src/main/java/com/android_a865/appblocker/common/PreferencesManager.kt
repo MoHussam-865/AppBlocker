@@ -2,11 +2,7 @@ package com.android_a865.appblocker.common
 
 import android.content.Context
 import android.preference.PreferenceManager
-import android.widget.Toast
-import com.android_a865.appblocker.models.App
-import com.android_a865.appblocker.services.BackgroundManager
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.android_a865.appblocker.feature_choose_apps.domain.App
 
 object PreferencesManager {
     private const val LOCKED_APPS = "locked_apps"

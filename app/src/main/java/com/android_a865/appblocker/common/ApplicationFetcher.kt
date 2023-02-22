@@ -3,8 +3,7 @@ package com.android_a865.appblocker.common
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
-import com.android_a865.appblocker.models.App
+import com.android_a865.appblocker.feature_choose_apps.domain.App
 import com.android_a865.appblocker.utils.getSelected
 import kotlin.collections.ArrayList
 

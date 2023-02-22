@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.broadcasts
+package com.android_a865.appblocker.common.broadcasts
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -9,7 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.services.MyAccessibilityService
+import com.android_a865.appblocker.common.services.MyAccessibilityService
 import com.android_a865.appblocker.utils.*
 
 class ReceiverAppLock : BroadcastReceiver() {

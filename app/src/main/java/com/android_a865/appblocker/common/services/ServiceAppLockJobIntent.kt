@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.services
+package com.android_a865.appblocker.common.services
 
 import android.content.Context
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.JobIntentService
 import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.broadcasts.ReceiverAppLock
+import com.android_a865.appblocker.common.broadcasts.ReceiverAppLock
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.utils.createNotificationChannel
 

@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.models
+package com.android_a865.appblocker.feature_choose_apps.domain
 
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon

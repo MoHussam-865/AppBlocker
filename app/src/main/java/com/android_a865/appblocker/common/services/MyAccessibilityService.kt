@@ -1,4 +1,4 @@
-package com.android_a865.appblocker.services
+package com.android_a865.appblocker.common.services
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
