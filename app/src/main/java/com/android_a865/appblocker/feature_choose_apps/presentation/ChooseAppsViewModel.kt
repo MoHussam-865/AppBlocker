@@ -5,33 +5,39 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android_a865.appblocker.common.AppFetcher
-import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.common.services.BackgroundManager
 import com.android_a865.appblocker.feature_choose_apps.domain.App
+import com.android_a865.appblocker.feature_home.domain.AppsPackage
+import com.android_a865.appblocker.feature_home.domain.PkgsRepository
 import com.android_a865.appblocker.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ChooseAppsViewModel @Inject constructor() : ViewModel() {
+class ChooseAppsViewModel @Inject constructor(
+    state: SavedStateHandle,
+    private val repository: PkgsRepository
+) : ViewModel() {
 
-    val installedApps = MutableLiveData<ArrayList<App>>(ArrayList())
+    private val pkg = state.get<AppsPackage>("app_pkg")
+    private val pkgName = state.get<String>("pkg_name")
+
+    val installedApps = MutableLiveData<ArrayList<App>>()
     private var apps
         get() = installedApps.value!!
         set(value) {
             installedApps.value = value
         }
 
-    val isActive = MutableLiveData(false)
+    val isActive = MutableLiveData(pkg?.isActive ?: false)
 
-    var lastTime: String = "0"
+    var lastTime: Long = pkg?.time ?: 0
 
     private val itemsWindowEventsChannel = Channel<MyWindowEvents>()
     val itemsWindowEvents = itemsWindowEventsChannel.receiveAsFlow()
@@ -39,9 +45,17 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun initiate(context: Context) {
-        apps = AppFetcher.getApps(context).arrange()
+        val myApps = AppFetcher.getApps(context)
+        apps = if (pkg != null) {
+            myApps.getSelected(context, pkg)
+                .arrange()
+        } else {
+            myApps.arrange()
+        }
 
-        isActive.value = PreferencesManager.isActive(context)
+
+
+        /*isActive.value = PreferencesManager.isActive(context)
 
         lastTime = PreferencesManager
             .getLastTime(context)
@@ -56,20 +70,14 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
                 requestPermissions(context)
             }
         }
+        */
 
-        // TODO observe list
-        observeList(context)
     }
 
-    fun onSelectedAppsChange(context: Context) {
-        PreferencesManager.setLockedApps(
-            context,
-            apps.filter { app -> app.selected }
-        )
-    }
 
     fun onActiveStateChanges(context: Context) = viewModelScope.launch {
-        apps = apps.getSelected(context).arrange()
+        // TODO
+        // apps = apps.getSelected(context).arrange()
 
         itemsWindowEventsChannel.send(
             MyWindowEvents.NotifyAdapter
@@ -81,22 +89,31 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun onStartBlockingPressed(context: Context, time: String) = viewModelScope.launch {
+    fun onFabClicked(context: Context, myTime: String) = viewModelScope.launch {
+        // we just need to verify (time & selected apps)
         try {
-            if (isPermissionsGranted(context)) {
-                block(
+            lastTime = myTime.toLong()
+
+            // time is in minute, the day has (24*60) minute
+            if (lastTime > (24 * 60) || lastTime == 0L) {
+                createMessage(
                     context,
-                    time.toInt()
+                    "Time Error",
+                    "can't block for less than 1 minute & more than 24 hours"
                 )
-            } else {
-                requestBox(
-                    context,
-                    "App Blocker",
-                    "We need some permissions to work properly"
-                ) {
-                    requestPermissions(context)
-                }
             }
+            else if (apps.any { it.selected }) {
+                // then save the package
+                repository.insertPkg(getPkgToSave())
+                // go back
+                itemsWindowEventsChannel.send(
+                    MyWindowEvents.GoBack
+                )
+            }
+            else {
+                Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
+            }
+
         } catch (e: Exception) {
             Toast.makeText(
                 context,
@@ -104,9 +121,19 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+
+    }
+
+    private fun getPkgToSave(): AppsPackage {
+        return AppsPackage(
+            name = pkg?.name ?: pkgName ?: "",
+            time = lastTime,
+            apps = apps.filter { it.selected }.map { it.packageName }
+        )
     }
 
 
+    /*
     @RequiresApi(Build.VERSION_CODES.S)
     private suspend fun block(context: Context, time: Int) {
 
@@ -146,8 +173,9 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
             Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
         }
     }
+    */
 
-
+/*
     private fun observeList(context: Context) = viewModelScope.launch {
 
         var lastValue = false
@@ -162,12 +190,11 @@ class ChooseAppsViewModel @Inject constructor() : ViewModel() {
         }
 
     }
+*/
 
 
     sealed class MyWindowEvents {
         object NotifyAdapter : MyWindowEvents()
-        /*object Loading : MyWindowEvents()
-        data class ToastMessage(val msg: String) : MyWindowEvents()
-        data class MessageBox(val msg: String) : MyWindowEvents()*/
+        object GoBack : MyWindowEvents()
     }
 }

@@ -47,7 +47,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_margin="20dp"
-        android:src="@drawable/ic_play"
+        android:src="@drawable/ic_done"
         tools:ignore="ContentDescription" />
 
 

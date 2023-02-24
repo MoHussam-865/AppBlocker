@@ -3,27 +3,20 @@ package com.android_a865.appblocker.feature_choose_apps.presentation
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.R
 import com.android_a865.appblocker.common.adapters.BlockedAppsAdapter
-import com.android_a865.appblocker.common.AppFetcher
-import com.android_a865.appblocker.common.PreferencesManager
-import com.android_a865.appblocker.common.services.BackgroundManager
 import com.android_a865.appblocker.databinding.FragmentChooseAppsBinding
 import com.android_a865.appblocker.feature_choose_apps.domain.App
 import com.android_a865.appblocker.utils.*
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
@@ -42,7 +35,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         binding.apply {
 
-            blockTime.editText?.setText(viewModel.lastTime)
+            blockTime.editText?.setText(viewModel.lastTime.toString())
 
             blockedAppsList.apply {
                 adapter = blockedAppsAdapter
@@ -51,7 +44,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
             }
 
             start.setOnClickListener {
-                viewModel.onStartBlockingPressed(
+                viewModel.onFabClicked(
                     requireContext(),
                     blockTime.editText?.text.toString()
                 )
@@ -64,6 +57,11 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
                 when (event) {
                     ChooseAppsViewModel.MyWindowEvents.NotifyAdapter -> {
                         blockedAppsAdapter.notifyDataSetChanged()
+                        true
+                    }
+                    ChooseAppsViewModel.MyWindowEvents.GoBack -> {
+                        findNavController().popBackStack()
+                        true
                     }
                 }.exhaustive
             }
@@ -72,7 +70,6 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         viewModel.installedApps.observe(viewLifecycleOwner) { list ->
             blockedAppsAdapter.submitList(list)
-            viewModel.onSelectedAppsChange(requireContext())
         }
 
 

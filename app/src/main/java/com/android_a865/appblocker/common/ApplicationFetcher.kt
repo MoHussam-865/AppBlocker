@@ -74,7 +74,7 @@ object AppFetcher {
 
         }
 
-        return apps.getSelected(context)
+        return apps
     }
 }
 

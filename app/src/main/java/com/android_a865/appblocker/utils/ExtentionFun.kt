@@ -3,9 +3,29 @@ package com.android_a865.appblocker.utils
 import android.content.Context
 import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.feature_choose_apps.domain.App
+import com.android_a865.appblocker.feature_home.data.PkgEntity
+import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import java.util.ArrayList
 
 val <T> T.exhaustive: T get() = this
+
+
+fun AppsPackage.toEntity() = PkgEntity(
+        name = name,
+        time = time,
+        isActive = isActive,
+        apps = apps.joinToString("/")
+    )
+
+
+fun PkgEntity.toDomain() = AppsPackage(
+        name = name,
+        time = time,
+        isActive = isActive,
+        apps = apps.split("/").filter { it != "" }
+    )
+
+
 
 fun ArrayList<App>.arrange(): ArrayList<App> {
     val sortedArray = ArrayList<App>()
@@ -28,9 +48,25 @@ fun ArrayList<App>.selectApp(
 
 
 fun ArrayList<App>.getSelected(
-    context: Context
+    context: Context,
+    pkg: AppsPackage
 ): ArrayList<App> {
-    val endTime = PreferencesManager.getEndTime(context)
+
+    val endTime = pkg.time
+    val lockedPkgs = pkg.apps
+
+    if (endTime < System.currentTimeMillis()) {
+        PreferencesManager.clearActiveLockedApps(context)
+    }
+    val activeLockedApps = PreferencesManager.getActiveLockedApps(context)
+
+    forEach {
+        it.selected = lockedPkgs.contains(it.packageName)
+        it.isActive = activeLockedApps.contains(it.packageName)
+    }
+    return this
+
+    /*val endTime = PreferencesManager.getEndTime(context)
     val lockedApps = PreferencesManager.getLockedApps(context)
     if (endTime < System.currentTimeMillis()) {
         PreferencesManager.clearActiveLockedApps(context)
@@ -41,8 +77,10 @@ fun ArrayList<App>.getSelected(
         it.selected = lockedApps.contains(it.packageName)
         it.isActive = activeLockedApps.contains(it.packageName)
     }
-    return this
+    return this*/
 }
+
+
 
 fun List<String>.containsIgnoreCase(str: String): Boolean {
     forEach {
