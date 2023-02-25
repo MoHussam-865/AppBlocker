@@ -15,11 +15,12 @@ import com.android_a865.appblocker.common.adapters.HomeListAdapter
 import com.android_a865.appblocker.databinding.FragmentHomeBinding
 import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import com.android_a865.appblocker.utils.exhaustive
+import com.android_a865.appblocker.utils.loadingProgress
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home),
-    HomeListAdapter.OnEventListener{
+    HomeListAdapter.OnEventListener {
 
     private val pkgAdapter = HomeListAdapter(this)
     private val viewModel by viewModels<HomeViewModel>()
@@ -57,6 +58,7 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         viewModel.pkgs.asLiveData().observe(viewLifecycleOwner) {
             pkgAdapter.submitList(it)
         }
+
 
         viewModel.initiate(requireContext())
     }

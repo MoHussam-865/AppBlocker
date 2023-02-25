@@ -31,8 +31,6 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentChooseAppsBinding.bind(view)
 
-        viewModel.initiate(requireContext())
-
         binding.apply {
 
             blockTime.editText?.setText(viewModel.editTextValue)
@@ -76,6 +74,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
             viewModel.onActiveStateChanges(requireContext())
         }
 
+        viewModel.initiate(requireContext())
     }
 
     override fun onItemClicked(app: App, isChecked: Boolean) {

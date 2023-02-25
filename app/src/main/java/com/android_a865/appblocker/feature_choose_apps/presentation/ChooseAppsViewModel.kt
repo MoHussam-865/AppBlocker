@@ -68,15 +68,15 @@ class ChooseAppsViewModel @Inject constructor(
                 )
                 // start the blocking service
                 BackgroundManager.startService(context)
+                itemsWindowEventsChannel.send(
+                    MyWindowEvents.NotifyAdapter
+                )
                 Toast.makeText(
                     context,
                     "Blocking started",
                     Toast.LENGTH_LONG
                 ).show()
             }
-            itemsWindowEventsChannel.send(
-                MyWindowEvents.NotifyAdapter
-            )
         }
 
 

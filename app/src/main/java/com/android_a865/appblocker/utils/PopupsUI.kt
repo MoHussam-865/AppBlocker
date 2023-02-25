@@ -42,7 +42,7 @@ fun accessibilityRequestMessage(context: Context) {
 
 // does not work properly
 @OptIn(DelicateCoroutinesApi::class)
-suspend fun loadingProgress(context: Context, func: () -> Unit) {
+suspend fun loadingProgress(context: Context, func: suspend () -> Unit) {
     val dialog = ProgressDialog(context)
     dialog.setTitle("Loading....")
     dialog.setCancelable(false)

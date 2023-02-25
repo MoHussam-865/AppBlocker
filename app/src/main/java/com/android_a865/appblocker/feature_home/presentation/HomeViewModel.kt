@@ -13,10 +13,12 @@ import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import com.android_a865.appblocker.feature_home.domain.PkgsRepository
 import com.android_a865.appblocker.utils.isPermissionsGranted
+import com.android_a865.appblocker.utils.loadingProgress
 import com.android_a865.appblocker.utils.requestBox
 import com.android_a865.appblocker.utils.requestPermissions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,15 +36,18 @@ class HomeViewModel @Inject constructor(
 
 
     fun initiate(context: Context) = viewModelScope.launch {
-        if (PreferencesManager.isActive(context)) {
-            // go to pkg view
-            eventsChannel.send(
-                WindowEvents.Navigate(
-                    HomeFragmentDirections.actionHomeFragmentToChooseAppsFragment(
-                        appPkg = repository.getActivePkg()
+        loadingProgress(context) {
+            if (PreferencesManager.isActive(context)) {
+                delay(1000)
+                // go to pkg view
+                eventsChannel.send(
+                    WindowEvents.Navigate(
+                        HomeFragmentDirections.actionHomeFragmentToChooseAppsFragment(
+                            appPkg = repository.getActivePkg()
+                        )
                     )
                 )
-            )
+            }
         }
     }
 
@@ -102,6 +107,7 @@ class HomeViewModel @Inject constructor(
 
     private fun block(pkg: AppsPackage) = viewModelScope.launch {
         pkg.isActive = true
+        repository.insertPkg(pkg)
 
         eventsChannel.send(
             WindowEvents.Navigate(
