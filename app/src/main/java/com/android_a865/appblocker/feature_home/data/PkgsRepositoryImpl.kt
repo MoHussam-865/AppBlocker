@@ -35,4 +35,12 @@ class PkgsRepositoryImpl(
     override suspend fun getActivePkg(): AppsPackage? {
         return dao.getActiveEntity()?.toDomain()
     }
+
+    override suspend fun clearActiveBlock() {
+        val pkg = dao.getActiveEntity()
+        pkg?.isActive = false
+        pkg?.let {
+            dao.insertPackage(it)
+        }
+    }
 }

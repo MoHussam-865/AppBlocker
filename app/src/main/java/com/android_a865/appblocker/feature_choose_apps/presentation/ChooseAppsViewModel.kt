@@ -27,7 +27,7 @@ class ChooseAppsViewModel @Inject constructor(
     private val repository: PkgsRepository
 ) : ViewModel() {
 
-    private val pkg = state.get<AppsPackage>("app_pkg")
+    private var pkg = state.get<AppsPackage>("app_pkg")
     private val pkgName = state.get<String>("pkg_name")
 
     val installedApps = MutableLiveData<ArrayList<App>>()
@@ -40,24 +40,22 @@ class ChooseAppsViewModel @Inject constructor(
     val isActive = MutableLiveData(pkg?.isActive ?: false)
 
     var lastTime: Int = pkg?.time ?: 0
+
     // so we don't need to clear the zero every time
-    val editTextValue: String = if (lastTime>0) lastTime.toString() else ""
+    val editTextValue: String = if (lastTime > 0) lastTime.toString() else ""
 
     private val itemsWindowEventsChannel = Channel<MyWindowEvents>()
     val itemsWindowEvents = itemsWindowEventsChannel.receiveAsFlow()
 
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun initiate(context: Context) = viewModelScope.launch  {
-        val myApps = AppFetcher.getApps(context)
-        apps = if (pkg != null) {
-            myApps.getSelected(context, pkg)
-                .arrange()
-        } else {
-            myApps.arrange()
-        }
+    fun initiate(context: Context) = viewModelScope.launch {
+        apps = getApps(context)
 
-        if (isActive.value == true) {
+        if (
+            isActive.value == true &&
+            PreferencesManager.isActive(context)
+        ) {
             loadingProgress(context) {
 
                 // saves the data to start blocking
@@ -68,6 +66,8 @@ class ChooseAppsViewModel @Inject constructor(
                 )
                 // start the blocking service
                 BackgroundManager.startService(context)
+                pkg = getPkgToSave()
+                apps = getApps(context)
                 itemsWindowEventsChannel.send(
                     MyWindowEvents.NotifyAdapter
                 )
@@ -78,30 +78,18 @@ class ChooseAppsViewModel @Inject constructor(
                 ).show()
             }
         }
-
-
-
-        /*isActive.value = PreferencesManager.isActive(context)
-
-        lastTime = PreferencesManager
-            .getLastTime(context)
-            .toString()
-
-        if (isActive.value!! && !isPermissionsGranted(context)) {
-            requestBox(
-                context,
-                "App Blocker",
-                "We need some permissions to work properly"
-            ) {
-                requestPermissions(context)
-            }
-        }
-        */
-
     }
 
+    private fun getApps(context: Context): ArrayList<App> {
+        val myApps = AppFetcher.getApps(context)
+        pkg?.let {
+            return myApps.getSelected(context, it)
+                .arrange()
+        }
+        return myApps.arrange()
+    }
 
-    fun onActiveStateChanges(context: Context) = viewModelScope.launch {
+    /*fun onActiveStateChanges(context: Context) = viewModelScope.launch {
         // TODO
         // apps = apps.getSelected(context).arrange()
 
@@ -109,7 +97,7 @@ class ChooseAppsViewModel @Inject constructor(
             MyWindowEvents.NotifyAdapter
         )
     }
-
+*/
     fun onAppSelected(app: App, checked: Boolean) {
         apps = apps.selectApp(app, checked)
     }
@@ -117,6 +105,10 @@ class ChooseAppsViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun onFabClicked(context: Context, myTime: String) = viewModelScope.launch {
         // we just need to verify (time & selected apps)
+        normalFabFlow(context, myTime)
+    }
+
+    private suspend fun normalFabFlow(context: Context, myTime: String) {
         try {
             lastTime = myTime.toInt()
 
@@ -127,16 +119,14 @@ class ChooseAppsViewModel @Inject constructor(
                     "Time Error",
                     "can't block for less than 1 minute & more than 24 hours"
                 )
-            }
-            else if (apps.any { it.selected }) {
+            } else if (apps.any { it.selected }) {
                 // then save the package
                 repository.insertPkg(getPkgToSave())
                 // go back
                 itemsWindowEventsChannel.send(
                     MyWindowEvents.GoBack
                 )
-            }
-            else {
+            } else {
                 Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
             }
 
@@ -147,7 +137,6 @@ class ChooseAppsViewModel @Inject constructor(
                 Toast.LENGTH_SHORT
             ).show()
         }
-
     }
 
     private fun getPkgToSave(): AppsPackage {

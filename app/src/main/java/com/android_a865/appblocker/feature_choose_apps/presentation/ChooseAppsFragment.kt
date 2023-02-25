@@ -71,7 +71,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
 
         viewModel.isActive.observe(viewLifecycleOwner) {
-            viewModel.onActiveStateChanges(requireContext())
+            //viewModel.onActiveStateChanges(requireContext())
         }
 
         viewModel.initiate(requireContext())

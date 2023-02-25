@@ -9,5 +9,5 @@ data class PkgEntity(
     val name: String,
     val time: Int,
     val apps: String = "",
-    val isActive: Boolean = false,
+    var isActive: Boolean = false,
 )
