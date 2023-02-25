@@ -82,8 +82,8 @@ class HomeListAdapter(
     }
 
     interface OnEventListener {
-        fun onDeleteClicked(app: AppsPackage)
-        fun onStartClicked(app: AppsPackage)
+        fun onDeleteClicked(pkg: AppsPackage)
+        fun onStartClicked(pkg: AppsPackage)
         fun onItemClicked(item: AppsPackage?)
     }
 }

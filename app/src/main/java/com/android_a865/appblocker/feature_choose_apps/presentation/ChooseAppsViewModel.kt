@@ -38,6 +38,7 @@ class ChooseAppsViewModel @Inject constructor(
     val isActive = MutableLiveData(pkg?.isActive ?: false)
 
     var lastTime: Long = pkg?.time ?: 0
+    // so we don't need to clear the zero every time
     val editTextValue: String = if (lastTime>0) lastTime.toString() else ""
 
     private val itemsWindowEventsChannel = Channel<MyWindowEvents>()
@@ -52,6 +53,11 @@ class ChooseAppsViewModel @Inject constructor(
                 .arrange()
         } else {
             myApps.arrange()
+        }
+
+        if (isActive.value == true) {
+            //
+
         }
 
 

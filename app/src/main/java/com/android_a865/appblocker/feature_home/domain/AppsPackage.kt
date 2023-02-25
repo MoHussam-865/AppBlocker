@@ -8,5 +8,5 @@ data class AppsPackage(
     val name: String,
     val time: Long,
     val apps: List<String>,
-    val isActive: Boolean = false,
+    var isActive: Boolean = false,
 ) : Parcelable

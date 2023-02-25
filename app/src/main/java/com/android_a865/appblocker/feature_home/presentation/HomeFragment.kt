@@ -1,8 +1,10 @@
 package com.android_a865.appblocker.feature_home.presentation
 
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +29,11 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentHomeBinding.bind(view)
 
+        viewModel.pkgs.asLiveData().observe(viewLifecycleOwner) {
+            viewModel.onPkgsSubmitted(it)
+            //pkgAdapter.submitList(it)
+        }
+
         binding.apply {
 
             blockedAppsList.apply {
@@ -47,13 +54,12 @@ class HomeFragment : Fragment(R.layout.fragment_home),
                     is HomeViewModel.WindowEvents.Navigate -> {
                         findNavController().navigate(event.direction)
                     }
+                    is HomeViewModel.WindowEvents.AdapterSubmit -> {
+                        pkgAdapter.submitList(event.pkgs)
+                    }
                 }.exhaustive
 
             }
-        }
-
-        viewModel.pkgs.asLiveData().observe(viewLifecycleOwner) {
-            pkgAdapter.submitList(it)
         }
 
     }
@@ -62,8 +68,9 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         viewModel.onDeleteItemClicked(pkg)
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onStartClicked(pkg: AppsPackage) {
-        viewModel.onBlockPackageClicked(pkg)
+        viewModel.onBlockPackageClicked(requireContext(), pkg)
     }
 
     override fun onItemClicked(item: AppsPackage?) {
