@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDirections
+import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import com.android_a865.appblocker.feature_home.domain.PkgsRepository
 import com.android_a865.appblocker.utils.isPermissionsGranted
@@ -16,7 +17,7 @@ import com.android_a865.appblocker.utils.requestBox
 import com.android_a865.appblocker.utils.requestPermissions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,10 +29,22 @@ class HomeViewModel @Inject constructor(
     val pkgs = repository.getPkgs()
     val isActive = MutableLiveData(false)
 
-
     private val eventsChannel = Channel<WindowEvents>()
     val windowEvents = eventsChannel.receiveAsFlow()
 
+
+    fun initiate(context: Context) = viewModelScope.launch {
+        if (PreferencesManager.isActive(context)) {
+            // go to pkg view
+            eventsChannel.send(
+                WindowEvents.Navigate(
+                    HomeFragmentDirections.actionHomeFragmentToChooseAppsFragment(
+                        appPkg = repository.getActivePkg()
+                    )
+                )
+            )
+        }
+    }
 
     fun onFabClicked(context: Context) {
         val editText = EditText(context)
@@ -99,35 +112,8 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun onPkgsSubmitted(pkgs: List<AppsPackage>) = viewModelScope.launch {
-        val pkg = pkgs.filter {
-            it.isActive
-        }
-
-        if (pkg.isNotEmpty() && pkg.size == 1) {
-            // go to pkg view
-            eventsChannel.send(
-                WindowEvents.Navigate(
-                    HomeFragmentDirections.actionHomeFragmentToChooseAppsFragment(
-                        appPkg = pkg[0]
-                    )
-                )
-            )
-        } else {
-            // submit to adapter
-            eventsChannel.send(
-                WindowEvents.AdapterSubmit(
-                    pkgs
-                )
-            )
-        }
-
-    }
-
 
     sealed class WindowEvents {
         data class Navigate(val direction: NavDirections) : WindowEvents()
-        data class AdapterSubmit(val pkgs: List<AppsPackage>) : WindowEvents()
-
     }
 }

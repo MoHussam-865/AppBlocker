@@ -9,6 +9,9 @@ interface PkgDao {
     @Query("SELECT * FROM Packages")
     fun getItemsEntity(): Flow<List<PkgEntity>>
 
+    @Query("SELECT * FROM Packages WHERE isActive = 1")
+    suspend fun getActiveEntity(): PkgEntity
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPackage(pkg: PkgEntity)
 

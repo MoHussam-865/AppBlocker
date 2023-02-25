@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class PkgEntity(
     @PrimaryKey
     val name: String,
-    val time: Long,
+    val time: Int,
     val apps: String = "",
     val isActive: Boolean = false,
 )

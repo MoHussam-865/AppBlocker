@@ -51,7 +51,6 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
             }
         }
 
-
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.itemsWindowEvents.collect { event ->
                 when (event) {

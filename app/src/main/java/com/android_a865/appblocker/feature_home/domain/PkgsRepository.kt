@@ -9,4 +9,6 @@ interface PkgsRepository {
 
     suspend fun deletePkg(pkg: AppsPackage)
 
+    suspend fun getActivePkg(): AppsPackage
+
 }

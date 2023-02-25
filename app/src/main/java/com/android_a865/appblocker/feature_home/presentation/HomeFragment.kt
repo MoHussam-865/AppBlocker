@@ -29,11 +29,6 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentHomeBinding.bind(view)
 
-        viewModel.pkgs.asLiveData().observe(viewLifecycleOwner) {
-            viewModel.onPkgsSubmitted(it)
-            //pkgAdapter.submitList(it)
-        }
-
         binding.apply {
 
             blockedAppsList.apply {
@@ -54,14 +49,16 @@ class HomeFragment : Fragment(R.layout.fragment_home),
                     is HomeViewModel.WindowEvents.Navigate -> {
                         findNavController().navigate(event.direction)
                     }
-                    is HomeViewModel.WindowEvents.AdapterSubmit -> {
-                        pkgAdapter.submitList(event.pkgs)
-                    }
                 }.exhaustive
 
             }
         }
 
+        viewModel.pkgs.asLiveData().observe(viewLifecycleOwner) {
+            pkgAdapter.submitList(it)
+        }
+
+        viewModel.initiate(requireContext())
     }
 
     override fun onDeleteClicked(pkg: AppsPackage) {

@@ -31,4 +31,6 @@ class PkgsRepositoryImpl(
             pkg.toEntity()
         )
     }
+
+    override suspend fun getActivePkg(): AppsPackage = dao.getActiveEntity().toDomain()
 }

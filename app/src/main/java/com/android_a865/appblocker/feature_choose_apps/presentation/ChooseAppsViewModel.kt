@@ -9,6 +9,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android_a865.appblocker.common.AppFetcher
+import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.common.services.BackgroundManager
 import com.android_a865.appblocker.feature_choose_apps.domain.App
 import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import com.android_a865.appblocker.feature_home.domain.PkgsRepository
@@ -37,7 +39,7 @@ class ChooseAppsViewModel @Inject constructor(
 
     val isActive = MutableLiveData(pkg?.isActive ?: false)
 
-    var lastTime: Long = pkg?.time ?: 0
+    var lastTime: Int = pkg?.time ?: 0
     // so we don't need to clear the zero every time
     val editTextValue: String = if (lastTime>0) lastTime.toString() else ""
 
@@ -46,7 +48,7 @@ class ChooseAppsViewModel @Inject constructor(
 
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun initiate(context: Context) {
+    fun initiate(context: Context) = viewModelScope.launch  {
         val myApps = AppFetcher.getApps(context)
         apps = if (pkg != null) {
             myApps.getSelected(context, pkg)
@@ -56,8 +58,25 @@ class ChooseAppsViewModel @Inject constructor(
         }
 
         if (isActive.value == true) {
-            //
+            loadingProgress(context) {
 
+                // saves the data to start blocking
+                PreferencesManager.setupLockSettings(
+                    context,
+                    apps,
+                    pkg?.time!!
+                )
+                // start the blocking service
+                BackgroundManager.startService(context)
+                Toast.makeText(
+                    context,
+                    "Blocking started",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            itemsWindowEventsChannel.send(
+                MyWindowEvents.NotifyAdapter
+            )
         }
 
 
@@ -99,10 +118,10 @@ class ChooseAppsViewModel @Inject constructor(
     fun onFabClicked(context: Context, myTime: String) = viewModelScope.launch {
         // we just need to verify (time & selected apps)
         try {
-            lastTime = myTime.toLong()
+            lastTime = myTime.toInt()
 
             // time is in minute, the day has (24*60) minute
-            if (lastTime > (24 * 60) || lastTime == 0L) {
+            if (lastTime > (24 * 60) || lastTime == 0) {
                 createMessage(
                     context,
                     "Time Error",
