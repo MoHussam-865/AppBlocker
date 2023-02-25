@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
+import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.asLiveData
@@ -59,7 +60,9 @@ class HomeFragment : Fragment(R.layout.fragment_home),
             pkgAdapter.submitList(it)
         }
 
-
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            requireActivity().finishAffinity()
+        }
         //viewModel.initiate(requireContext())
     }
 

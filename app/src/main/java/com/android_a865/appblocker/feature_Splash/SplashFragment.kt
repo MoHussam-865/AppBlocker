@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
+import androidx.activity.addCallback
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.android_a865.appblocker.R
@@ -23,13 +24,15 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
         Thread.sleep(1000)
         if (PreferencesManager.isActive(requireContext())) {
             Log.d(TAG, "blocking Active")
             lifecycleScope.launch {
                 findNavController().navigate(
                     SplashFragmentDirections.actionSplashFragmentToChooseAppsFragment(
-                        appPkg = repository.getActivePkg()
+                        appPkg = repository.getActivePkg(),
+                        alreadyActive = true
                     )
                 )
             }

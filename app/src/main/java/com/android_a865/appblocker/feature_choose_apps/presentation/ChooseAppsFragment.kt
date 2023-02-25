@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -36,9 +37,10 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         binding.apply {
 
-            viewModel.editTextValue.asLiveData().observe(viewLifecycleOwner) {
-                blockTime.editText?.setText(it)
-            }
+            blockTime.editText?.setText(
+                viewModel.lastTime.toString()
+            )
+
 
             blockedAppsList.apply {
                 adapter = blockedAppsAdapter
@@ -73,14 +75,19 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         viewModel.installedApps.observe(viewLifecycleOwner) { list ->
             blockedAppsAdapter.submitList(list)
-
-            //blockedAppsAdapter.notifyDataSetChanged()
         }
 
-
-        /*viewModel.isActive.asLiveData().observe(viewLifecycleOwner) {
-            //viewModel.onActiveStateChanges(requireContext())
-        }*/
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (viewModel.active.value) {
+                requireActivity().finishAffinity()
+            } else {
+                viewModel.onFabClicked(
+                    requireContext(),
+                    binding.blockTime.editText?.text.toString()
+                )
+                findNavController().popBackStack()
+            }
+        }
 
     }
 

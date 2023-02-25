@@ -52,16 +52,15 @@ fun ArrayList<App>.getSelected(
     pkg: AppsPackage
 ): ArrayList<App> {
 
-    val endTime = pkg.time
-    val lockedPkgs = pkg.apps
+    val selectedApps = pkg.apps
 
-    if (endTime < System.currentTimeMillis()) {
+    if (!PreferencesManager.isActive(context)) {
         PreferencesManager.clearActiveLockedApps(context)
     }
     val activeLockedApps = PreferencesManager.getActiveLockedApps(context)
 
     forEach {
-        it.selected = lockedPkgs.contains(it.packageName)
+        it.selected = selectedApps.contains(it.packageName)
         it.isActive = activeLockedApps.contains(it.packageName)
     }
     return this

@@ -33,14 +33,13 @@ class ChooseAppsViewModel @Inject constructor(
 
     private var pkg = state.get<AppsPackage>("app_pkg")
     private var pkgName = pkg?.name ?: state.get<String>("pkg_name") ?: ""
-    private val active = MutableStateFlow(pkg?.isActive ?: false)
-    private var lastTime: Int = pkg?.time ?: 0
+    private var alreadyActive = state.get<Boolean>("already_active") ?: false
+
+    val active = MutableStateFlow(pkg?.isActive ?: false)
+    var lastTime: Int = pkg?.time ?: 1
 
     // so we don't need to clear the zero every time
-    // TODO remove complecation
-    var editTextValue = MutableStateFlow(
-        if (lastTime > 0) lastTime.toString() else ""
-    )
+
 
     val installedApps = MutableLiveData<ArrayList<App>>()
     private var apps
@@ -62,33 +61,7 @@ class ChooseAppsViewModel @Inject constructor(
         Log.d(TAG, "${pkg?.isActive}")
         Log.d(TAG, "${pkg?.name}")
 
-        if (active.value) {
-            loadingProgress(context) {
-
-                // saves the data to start blocking
-                PreferencesManager.setupLockSettings(
-                    context,
-                    apps,
-                    pkg?.time!!
-                )
-                // start the blocking service
-                BackgroundManager.startService(context)
-
-                //
-                /*pkg = getPkgToSave()
-                apps = getApps(context)
-                */
-                apps = getApps(context)
-                itemsWindowEventsChannel.send(
-                    MyWindowEvents.NotifyAdapter(apps)
-                )
-                Toast.makeText(
-                    context,
-                    "Blocking started",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+        if (active.value && !alreadyActive) blockPackage(context)
 
     }
 
@@ -108,16 +81,15 @@ class ChooseAppsViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun onFabClicked(context: Context, myTime: String) = viewModelScope.launch {
         // we just need to verify (time & selected apps)
-        if (active.value) {
-            // save the package and add to blocking
-        } else {
-            normalFabFlow(context, myTime)
-        }
-    }
-
-    private suspend fun normalFabFlow(context: Context, myTime: String) {
         try {
             lastTime = myTime.toInt()
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Time set to default",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
             // time is in minute, the day has (24*60) minute
             if (lastTime > (24 * 60) || lastTime == 0) {
@@ -129,22 +101,25 @@ class ChooseAppsViewModel @Inject constructor(
             } else if (apps.any { it.selected }) {
                 // then save the package
                 repository.insertPkg(getPkgToSave())
-                // go back
-                itemsWindowEventsChannel.send(
-                    MyWindowEvents.GoBack
-                )
+
+                if (active.value) {
+                    // add new selected apps to the blocking
+                    blockPackage(context)
+                } else {
+                    // go back
+                    itemsWindowEventsChannel.send(
+                        MyWindowEvents.GoBack
+                    )
+                }
+
             } else {
                 Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
             }
 
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Enter Time",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+
+
     }
+
 
     private fun getPkgToSave(): AppsPackage {
         return AppsPackage(
@@ -152,6 +127,34 @@ class ChooseAppsViewModel @Inject constructor(
             time = lastTime,
             apps = apps.filter { it.selected }.map { it.packageName }
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private suspend fun blockPackage(context: Context) {
+        loadingProgress(context) {
+
+            // saves the data to start blocking
+            PreferencesManager.setupLockSettings(
+                context,
+                apps,
+                pkg?.time!!
+            )
+            // start the blocking service
+            BackgroundManager.startService(context)
+
+            //
+            apps = apps.getSelected(context, getPkgToSave()).arrange()
+            itemsWindowEventsChannel.send(
+                MyWindowEvents.NotifyAdapter(apps)
+            )
+
+            Toast.makeText(
+                context,
+                "Blocking started",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
     }
 
 

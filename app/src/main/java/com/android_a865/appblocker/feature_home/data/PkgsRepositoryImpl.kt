@@ -16,7 +16,7 @@ class PkgsRepositoryImpl(
         return dao.getItemsEntity().map { list ->
             list.map {pkg ->
                 pkg.toDomain()
-            }
+            }.reversed()
         }
     }
 
