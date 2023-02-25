@@ -125,7 +125,8 @@ class ChooseAppsViewModel @Inject constructor(
         return AppsPackage(
             name = pkgName,
             time = lastTime,
-            apps = apps.filter { it.selected }.map { it.packageName }
+            apps = apps.filter { it.selected }.map { it.packageName },
+            isActive = active.value
         )
     }
 
@@ -139,10 +140,12 @@ class ChooseAppsViewModel @Inject constructor(
                 apps,
                 pkg?.time!!
             )
+            //repository.insertPkg(getPkgToSave())
+
             // start the blocking service
             BackgroundManager.startService(context)
 
-            //
+            // disable checkboxes
             apps = apps.getSelected(context, getPkgToSave()).arrange()
             itemsWindowEventsChannel.send(
                 MyWindowEvents.NotifyAdapter(apps)

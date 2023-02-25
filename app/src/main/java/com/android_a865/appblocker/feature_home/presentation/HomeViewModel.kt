@@ -103,7 +103,7 @@ class HomeViewModel @Inject constructor(
     private fun block(pkg: AppsPackage) = viewModelScope.launch {
         // save that package for later
         pkg.isActive = true
-        repository.insertPkg(pkg)
+        //repository.insertPkg(pkg)
 
         eventsChannel.send(
             WindowEvents.Navigate(

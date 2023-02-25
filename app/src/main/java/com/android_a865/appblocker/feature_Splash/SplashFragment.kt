@@ -2,9 +2,8 @@ package com.android_a865.appblocker.feature_Splash
 
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.View
-import androidx.activity.addCallback
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.android_a865.appblocker.R
@@ -16,8 +15,8 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class SplashFragment : Fragment(R.layout.fragment_splash) {
+    private val tag = "app_dep"
 
-    private val TAG = "app_dep"
     @Inject
     lateinit var repository: PkgsRepository
 
@@ -27,18 +26,19 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
 
         Thread.sleep(1000)
         if (PreferencesManager.isActive(requireContext())) {
-            Log.d(TAG, "blocking Active")
             lifecycleScope.launch {
+                val pkg = repository.getActivePkg()
+                Log.d(tag, "blocking Active ${pkg?.name}")
                 findNavController().navigate(
                     SplashFragmentDirections.actionSplashFragmentToChooseAppsFragment(
-                        appPkg = repository.getActivePkg(),
+                        appPkg = pkg,
                         alreadyActive = true
                     )
                 )
             }
         } else {
             lifecycleScope.launch {
-                Log.d(TAG, "blocking Active")
+                Log.d(tag, "blocking Active")
                 repository.clearActiveBlock()
 
                 findNavController().navigate(
