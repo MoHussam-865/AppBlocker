@@ -38,6 +38,7 @@ class ChooseAppsViewModel @Inject constructor(
     val isActive = MutableLiveData(pkg?.isActive ?: false)
 
     var lastTime: Long = pkg?.time ?: 0
+    val editTextValue: String = if (lastTime>0) lastTime.toString() else ""
 
     private val itemsWindowEventsChannel = Channel<MyWindowEvents>()
     val itemsWindowEvents = itemsWindowEventsChannel.receiveAsFlow()

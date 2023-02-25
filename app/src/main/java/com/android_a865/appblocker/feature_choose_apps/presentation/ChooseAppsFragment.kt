@@ -35,7 +35,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         binding.apply {
 
-            blockTime.editText?.setText(viewModel.lastTime.toString())
+            blockTime.editText?.setText(viewModel.editTextValue)
 
             blockedAppsList.apply {
                 adapter = blockedAppsAdapter
