@@ -9,16 +9,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDirections
-import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.feature_home.domain.AppsPackage
 import com.android_a865.appblocker.feature_home.domain.PkgsRepository
 import com.android_a865.appblocker.utils.isPermissionsGranted
-import com.android_a865.appblocker.utils.loadingProgress
 import com.android_a865.appblocker.utils.requestBox
 import com.android_a865.appblocker.utils.requestPermissions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,7 +32,7 @@ class HomeViewModel @Inject constructor(
     val windowEvents = eventsChannel.receiveAsFlow()
 
 
-    fun initiate(context: Context) = viewModelScope.launch {
+    /*fun initiate(context: Context) = viewModelScope.launch {
         loadingProgress(context) {
             if (PreferencesManager.isActive(context)) {
                 delay(1000)
@@ -50,7 +47,7 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
+*/
     fun onFabClicked(context: Context) {
         val editText = EditText(context)
         AlertDialog.Builder(context)
@@ -74,11 +71,11 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun onItemClicked(item: AppsPackage?) = viewModelScope.launch {
+    fun onItemClicked(pkg: AppsPackage?) = viewModelScope.launch {
         eventsChannel.send(
             WindowEvents.Navigate(
                 HomeFragmentDirections.actionHomeFragmentToChooseAppsFragment(
-                    appPkg = item
+                    appPkg = pkg
                 )
             )
         )
@@ -101,11 +98,10 @@ class HomeViewModel @Inject constructor(
                 requestPermissions(context)
             }
         }
-
-
     }
 
     private fun block(pkg: AppsPackage) = viewModelScope.launch {
+        // save that package for later
         pkg.isActive = true
         repository.insertPkg(pkg)
 

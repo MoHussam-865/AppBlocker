@@ -60,7 +60,7 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         }
 
 
-        viewModel.initiate(requireContext())
+        //viewModel.initiate(requireContext())
     }
 
     override fun onDeleteClicked(pkg: AppsPackage) {
