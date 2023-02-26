@@ -29,7 +29,8 @@ fun PkgEntity.toDomain() = AppsPackage(
 
 fun ArrayList<App>.arrange(): ArrayList<App> {
     val sortedArray = ArrayList<App>()
-    sortedArray.addAll(filter { it.selected })
+    sortedArray.addAll(filter { it.active }.sortedBy { it.name })
+    sortedArray.addAll(filter { it.selected && !it.active }.sortedBy { it.name })
     sortedArray.addAll(filter { !it.selected }.sortedBy { it.name })
     return sortedArray
 }
@@ -61,7 +62,7 @@ fun ArrayList<App>.getSelected(
 
     forEach {
         it.selected = selectedApps.contains(it.packageName)
-        it.isActive = activeLockedApps.contains(it.packageName)
+        it.active = activeLockedApps.contains(it.packageName)
     }
     return this
 

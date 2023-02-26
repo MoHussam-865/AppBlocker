@@ -62,6 +62,13 @@ class ChooseAppsViewModel @Inject constructor(
         Log.d(TAG, "${pkg?.name}")
 
         if (active.value && !alreadyActive) blockPackage(context)
+        if (active.value) observeList()
+    }
+
+    private fun observeList() = viewModelScope.launch {
+        itemsWindowEventsChannel.send(
+            MyWindowEvents.ObserveList
+        )
     }
 
     private fun getApps(context: Context): ArrayList<App> {
@@ -122,6 +129,10 @@ class ChooseAppsViewModel @Inject constructor(
 
     }
 
+    fun savePackage()  = viewModelScope.launch {
+        repository.insertPkg(getPkgToSave())
+    }
+
 
     private fun getPkgToSave(): AppsPackage {
         return AppsPackage(
@@ -148,10 +159,7 @@ class ChooseAppsViewModel @Inject constructor(
             BackgroundManager.startService(context)
 
             // disable checkboxes
-            apps = apps.getSelected(context, getPkgToSave()).arrange()
-            itemsWindowEventsChannel.send(
-                MyWindowEvents.NotifyAdapter(apps)
-            )
+            checkBoxesState(context)
 
             Toast.makeText(
                 context,
@@ -162,9 +170,26 @@ class ChooseAppsViewModel @Inject constructor(
 
     }
 
+    fun onBlockingFinished(context: Context) = viewModelScope.launch {
+        // clear the ActiveLockedApps from Pref
+        active.value = false
+        repository.insertPkg(getPkgToSave())
+        checkBoxesState(context)
+        /*itemsWindowEventsChannel.send(
+            MyWindowEvents.GoBack
+        )*/
+    }
+
+    private suspend fun checkBoxesState(context: Context) {
+        apps = apps.getSelected(context, getPkgToSave()).arrange()
+        itemsWindowEventsChannel.send(
+            MyWindowEvents.NotifyAdapter(apps)
+        )
+    }
 
     sealed class MyWindowEvents {
         data class NotifyAdapter(val apps: List<App>) : MyWindowEvents()
         object GoBack : MyWindowEvents()
+        object ObserveList : MyWindowEvents()
     }
 }

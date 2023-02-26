@@ -1,6 +1,7 @@
 package com.android_a865.appblocker.feature_choose_apps.presentation
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -12,11 +13,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android_a865.appblocker.R
+import com.android_a865.appblocker.common.PreferencesManager
 import com.android_a865.appblocker.common.adapters.BlockedAppsAdapter
 import com.android_a865.appblocker.databinding.FragmentChooseAppsBinding
 import com.android_a865.appblocker.feature_choose_apps.domain.App
 import com.android_a865.appblocker.utils.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
@@ -66,6 +70,10 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
                         blockedAppsAdapter.notifyDataSetChanged()
                         true
                     }
+                    ChooseAppsViewModel.MyWindowEvents.ObserveList -> {
+                        observeList(requireContext())
+                        true
+                    }
                 }.exhaustive
             }
         }
@@ -77,6 +85,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             if (viewModel.active.value) {
+                viewModel.savePackage()
                 requireActivity().finishAffinity()
             } else {
                 viewModel.onFabClicked(
@@ -91,6 +100,15 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
 
     override fun onItemClicked(app: App, isChecked: Boolean) {
         viewModel.onAppSelected(app, isChecked)
+    }
+
+    private fun observeList(context: Context) {
+        lifecycleScope.launch {
+            while (PreferencesManager.isActive(context)) {
+                delay(3000)
+            }
+            viewModel.onBlockingFinished(context)
+        }
     }
 }
 

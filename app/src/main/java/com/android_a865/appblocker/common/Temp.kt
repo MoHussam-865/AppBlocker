@@ -2,45 +2,40 @@ package com.android_a865.appblocker.common
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/*
+
 @Singleton
 class PreferencesManager2 @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("user_preferences")
+
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "AppBlockerPref"
+    )
 
     val preferencesFlow = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) {
                 Log.d("PreferencesManager", "Error reading the preferences", exception)
                 emit(emptyPreferences())
-            }else {
+            } else {
                 throw exception
             }
 
         }
         .map { preferences ->
-            AppSettings(
-                company = preferences[PreferencesKeys.COMPANY_INFO]?.toObject() ?: Company(),
-                dateFormat = preferences[PreferencesKeys.DATE_FORMAT] ?: DATE_FORMATS[0],
-                currency = preferences[PreferencesKeys.CURRENCY] ?: "",
-                isFirst = preferences[PreferencesKeys.IS_FIRST] ?: true,
-                isSubscribed = preferences[PreferencesKeys.IS_SUBSCRIBED] ?: false
-            )
-        }
 
-
-    suspend fun updateCompanyInfo(company: Company) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.COMPANY_INFO] = company.toJson()
         }
-    }
 
     suspend fun updateDateFormat(dateFormat: String) {
         context.dataStore.edit { preferences ->
@@ -48,21 +43,9 @@ class PreferencesManager2 @Inject constructor(
         }
     }
 
-    suspend fun updateCurrency(currency: String) {
+    suspend fun getSomething(dateFormat: String) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.CURRENCY] = currency
-        }
-    }
-
-    suspend fun updateIsFirst(isFirst: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.IS_FIRST] = isFirst
-        }
-    }
-
-    suspend fun updateIsSubscribed(isSubscribed: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.IS_SUBSCRIBED] = isSubscribed
+            preferences[PreferencesKeys.DATE_FORMAT] = dateFormat
         }
     }
 
@@ -74,4 +57,7 @@ class PreferencesManager2 @Inject constructor(
         val IS_FIRST = booleanPreferencesKey("is_first")
         val IS_SUBSCRIBED = booleanPreferencesKey("is_subscribed")
     }
-}*/
+}
+
+
+
