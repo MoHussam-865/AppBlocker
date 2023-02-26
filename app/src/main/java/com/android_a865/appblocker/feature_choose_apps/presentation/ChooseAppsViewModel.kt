@@ -62,7 +62,6 @@ class ChooseAppsViewModel @Inject constructor(
         Log.d(TAG, "${pkg?.name}")
 
         if (active.value && !alreadyActive) blockPackage(context)
-
     }
 
     private fun getApps(context: Context): ArrayList<App> {
@@ -99,13 +98,18 @@ class ChooseAppsViewModel @Inject constructor(
                     "can't block for less than 1 minute & more than 24 hours"
                 )
             } else if (apps.any { it.selected }) {
-                // then save the package
-                repository.insertPkg(getPkgToSave())
 
                 if (active.value) {
                     // add new selected apps to the blocking
+                    /**
+                        no needed to insert the pkg because
+                        blockPackage fun already dose that
+                     */
                     blockPackage(context)
                 } else {
+                    // then save the package
+                    /** (needed here) */
+                    repository.insertPkg(getPkgToSave())
                     // go back
                     itemsWindowEventsChannel.send(
                         MyWindowEvents.GoBack
@@ -115,8 +119,6 @@ class ChooseAppsViewModel @Inject constructor(
             } else {
                 Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
             }
-
-
 
     }
 
@@ -140,7 +142,7 @@ class ChooseAppsViewModel @Inject constructor(
                 apps,
                 pkg?.time!!
             )
-            //repository.insertPkg(getPkgToSave())
+            repository.insertPkg(getPkgToSave())
 
             // start the blocking service
             BackgroundManager.startService(context)
