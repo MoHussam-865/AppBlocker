@@ -89,13 +89,6 @@ class ChooseAppsViewModel @Inject constructor(
         // we just need to verify (time & selected apps)
         try {
             lastTime = myTime.toInt()
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Time set to default",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
 
             // time is in minute, the day has (24*60) minute
             if (lastTime > (24 * 60) || lastTime == 0) {
@@ -104,16 +97,18 @@ class ChooseAppsViewModel @Inject constructor(
                     "Time Error",
                     "can't block for less than 1 minute & more than 24 hours"
                 )
-            } else if (apps.any { it.selected }) {
+            }
+            else if (apps.any { it.selected }) {
 
                 if (active.value) {
                     // add new selected apps to the blocking
                     /**
-                        no needed to insert the pkg because
-                        blockPackage fun already dose that
+                    no needed to insert the pkg because
+                    blockPackage fun already dose that
                      */
                     blockPackage(context)
-                } else {
+                }
+                else {
                     // then save the package
                     /** (needed here) */
                     repository.insertPkg(getPkgToSave())
@@ -123,10 +118,18 @@ class ChooseAppsViewModel @Inject constructor(
                     )
                 }
 
-            } else {
+            }
+            else {
                 Toast.makeText(context, "No apps selected", Toast.LENGTH_LONG).show()
             }
 
+        } catch (e: Exception) {
+            createMessage(
+                context,
+                "Time Error",
+                "please enter time"
+            )
+        }
     }
 
     fun savePackage()  = viewModelScope.launch {
@@ -151,7 +154,7 @@ class ChooseAppsViewModel @Inject constructor(
             PreferencesManager.setupLockSettings(
                 context,
                 apps,
-                pkg?.time!!
+                lastTime
             )
             repository.insertPkg(getPkgToSave())
 

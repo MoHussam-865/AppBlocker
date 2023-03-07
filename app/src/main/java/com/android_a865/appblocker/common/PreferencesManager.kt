@@ -65,9 +65,11 @@ object PreferencesManager {
         lastTime: Int
     ) {
 
-        val endTime = System.currentTimeMillis() + lastTime * 60000
-
-        if (endTime < getEndTime(context)) return
+        var endTime = System.currentTimeMillis() + lastTime * 60000
+        val lastEndTime = getEndTime(context)
+        if (endTime < lastEndTime) {
+            endTime = lastEndTime
+        }
 
         val allApps = AppFetcher.getAllInstalledApplications(context)
 
