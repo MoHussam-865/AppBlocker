@@ -92,7 +92,7 @@ class ChooseAppsFragment : Fragment(R.layout.fragment_choose_apps),
                     requireContext(),
                     binding.blockTime.editText?.text.toString()
                 )
-                findNavController().popBackStack()
+                //findNavController().popBackStack() don't add this
             }
         }
 
