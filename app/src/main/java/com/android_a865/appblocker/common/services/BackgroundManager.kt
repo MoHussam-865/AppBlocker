@@ -1,21 +1,23 @@
 package com.android_a865.appblocker.common.services
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.android_a865.appblocker.admin.MyDeviceAdminReceiver
-import com.android_a865.appblocker.common.broadcasts.RestartServiceWhenStopped
 import com.android_a865.appblocker.common.PreferencesManager
+import com.android_a865.appblocker.common.broadcasts.RestartServiceWhenStopped
 import com.android_a865.appblocker.utils.isServiceRunning
 
-
+/**
+ * Handles starting and stoping services
+ */
 object BackgroundManager {
 
+    private var accessibilityService: MyAccessibilityService? = null
     private const val period = 15 * 1000
     private const val ALARM_ID = 159874
 
@@ -28,7 +30,7 @@ object BackgroundManager {
                 ServiceAppLockJobIntent.enqueueWork(context, intent)
                 Log.d("app_running", "service started")
             }
-            accessibility(context)
+            accessibility()
             startAlarm(context)
         } else stopService(context)
     }
@@ -41,9 +43,10 @@ object BackgroundManager {
             stopAlarm(context)
             Log.d("app_running", "service stopped")
         }
-        unAccessibility(context)
+        accessibilityService?.onDestroy()
     }
 
+    @SuppressLint("ScheduleExactAlarm")
     @RequiresApi(Build.VERSION_CODES.S)
     fun startAlarm(context: Context) {
         val intent = Intent(context, RestartServiceWhenStopped::class.java)
@@ -75,26 +78,14 @@ object BackgroundManager {
         manager.cancel(pendingIntent)
     }
 
-    private fun accessibility(context: Context) {
+
+    private fun accessibility() {
         if (
-            !isServiceRunning(
-                context,
-                MyAccessibilityService::class.java
-            )
+            accessibilityService == null
         ) {
-            context.startService(Intent(context, MyAccessibilityService::class.java))
+            accessibilityService = MyAccessibilityService()
         }
     }
 
-    private fun unAccessibility(context: Context) {
-        if (
-            isServiceRunning(
-                context,
-                MyAccessibilityService::class.java
-            )
-        ) {
-            context.stopService(Intent(context, MyAccessibilityService::class.java))
-        }
-    }
 
 }
